@@ -1,8 +1,11 @@
-# DAZK: ZK-Rollup Friendly Data Availability Layer (No Trusted Setup)
+# DAZK: The ZK Friendly DA Layer for Bitcoin L2s
 
 DAZK is a ZK-Rollup friendly data availability layer built on the Malachite consensus framework.
 It provides strong data availability guarantees using STARK-friendly cryptographic primitives
 without requiring a trusted setup.
+
+It is design to be particularly friendly to ZK-Rollups, by providing a DA layer that is
+compatible with the FRI commitment scheme, and by eliminating the need for a trusted setup.
 
 ## Key Features
 
