@@ -1,18 +1,22 @@
-# DAZK: The ZK Friendly DA Layer for Bitcoin L2s
+# Mikan 🍊: The ZK Friendly DA Layer for Bitcoin L2s
 
-DAZK is a ZK-Rollup friendly data availability layer built on the Malachite consensus framework.
+Mikan is a ZK-Rollup friendly data availability layer built on the Malachite consensus framework.
 It provides strong data availability guarantees using STARK-friendly cryptographic primitives
 without requiring a trusted setup.
 
 It is design to be particularly friendly to ZK-Rollups, by providing a DA layer that is
 compatible with the FRI commitment scheme, and by eliminating the need for a trusted setup.
 
+> Name origin 🍊 (蜜柑):
+>
+> Officially known as a Citrus unshiu or unshiu mikan, mikan is a type of mandarin orange and citrus fruit that originated in southern Japan approximately 400 years ago.
+
 ## Key Features
 
-- **No Trusted Setup**: Unlike solutions using KZG commitments, DAZK relies on transparent
+- **No Trusted Setup**: Unlike solutions using KZG commitments, Mikan relies on transparent
   cryptography based on the FRI protocol, eliminating the need for trusted setup ceremonies.
 
-- **ZK-Friendly Proofs**: DAZK generates succinct proofs of data availability using the M31
+- **ZK-Friendly Proofs**: Mikan generates succinct proofs of data availability using the M31
   field (Mersenne prime 2^31-1), which is STARK-friendly and can be efficiently verified
   inside ZK proofs.
 
@@ -24,7 +28,7 @@ compatible with the FRI commitment scheme, and by eliminating the need for a tru
 
 ## Architecture
 
-DAZK consists of the following components:
+Mikan consists of the following components:
 
 1. **Consensus Layer**: Based on Malachite BFT, handling block production and agreement.
 2. **Data Availability Layer**: Uses FRI commitments and proofs for data availability sampling.
@@ -78,10 +82,10 @@ Press `Ctrl-C` to stop all the nodes.
 
 ## Usage for Rollups
 
-Rollups can submit data to DAZK via its API:
+Rollups can submit data to Mikan via its API:
 
-1. **Submit Data**: Rollup submits transaction data to DAZK nodes
-2. **Receive Commitment**: DAZK returns a cryptographic commitment to the data
+1. **Submit Data**: Rollup submits transaction data to Mikan nodes
+2. **Receive Commitment**: Mikan returns a cryptographic commitment to the data
 3. **Verify Availability**: Anyone can verify data availability by sampling
 
 The FRI commitment can be included in the rollup's state transition proof, creating

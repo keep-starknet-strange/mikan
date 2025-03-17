@@ -992,34 +992,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dazk"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "bytes",
- "color-eyre",
- "config",
- "derive-where",
- "eyre",
- "frieda",
- "informalsystems-malachitebft-app-channel",
- "informalsystems-malachitebft-proto",
- "informalsystems-malachitebft-test",
- "informalsystems-malachitebft-test-cli",
- "itertools 0.13.0",
- "prost",
- "rand 0.8.5",
- "redb",
- "serde",
- "serde_json",
- "sha3",
- "thiserror 2.0.12",
- "tokio",
- "toml",
- "tracing",
-]
-
-[[package]]
 name = "der"
 version = "0.7.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3011,6 +2983,34 @@ name = "memchr"
 version = "2.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "78ca9ab1a0babb1e7d5695e3530886289c18cf2f87ec19a575a0abdce112e3a3"
+
+[[package]]
+name = "mikan"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "bytes",
+ "color-eyre",
+ "config",
+ "derive-where",
+ "eyre",
+ "frieda",
+ "informalsystems-malachitebft-app-channel",
+ "informalsystems-malachitebft-proto",
+ "informalsystems-malachitebft-test",
+ "informalsystems-malachitebft-test-cli",
+ "itertools 0.13.0",
+ "prost",
+ "rand 0.8.5",
+ "redb",
+ "serde",
+ "serde_json",
+ "sha3",
+ "thiserror 2.0.12",
+ "tokio",
+ "toml",
+ "tracing",
+]
 
 [[package]]
 name = "mime"

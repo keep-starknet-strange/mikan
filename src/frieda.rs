@@ -1,7 +1,7 @@
-//! FRIEDA integration for DAZK
+//! FRIEDA integration for Mikan
 //! FRI Extended for Data Availability: a FRI-based Data Availability Sampling library, written in Rust.
 //! FRIEDA repository: https://github.com/keep-starknet-strange/frieda
-//! TODO: Integrate FRIEDA library into DAZK for the DA primitives.
+//! TODO: Integrate FRIEDA library into Mikan for the DA primitives.
 
 mod tests {
 

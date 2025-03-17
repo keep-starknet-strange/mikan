@@ -1,10 +1,10 @@
 [package]
-name = "dazk"
+name = "mikan"
 version = "0.1.0"
 edition = "2021"
 description = "ZK-Rollup Friendly Data Availability Layer for Bitcoin L2s"
 license = "MIT"
-repository = "https://github.com/AbdelStark/dazk"
+repository = "https://github.com/AbdelStark/mikan"
 keywords = ["cryptography", "data-availability", "fri", "erasure-coding"]
 categories = ["cryptography", "algorithms"]
 

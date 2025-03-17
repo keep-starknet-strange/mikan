@@ -33,7 +33,7 @@ if [[ -z "$NODES_HOME" ]]; then
 fi
 
 if [[ -z "$APP_BINARY" ]]; then
-    APP_BINARY="dazk"
+    APP_BINARY="mikan"
 fi
 
 echo "Compiling '$APP_BINARY'..."
