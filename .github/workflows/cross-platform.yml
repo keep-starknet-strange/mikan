@@ -36,7 +36,7 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
+          toolchain: nightly
           target: ${{ matrix.job.target }}
           
       - name: Install protobuf compiler on Linux/macOS
