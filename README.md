@@ -42,10 +42,10 @@ compatible with the FRI commitment scheme, and by eliminating the need for a tru
   - [📐 Architecture](#-architecture)
     - [🔑 Cryptographic Components](#-cryptographic-components)
   - [🎮 Getting Started](#-getting-started)
-    - [📦 Prerequisites](#-prerequisites)
-    - [🎮 Run a local testnet](#-run-a-local-testnet)
-      - [📦 Build the app](#-build-the-app)
-    - [📦 Setup the testnet](#-setup-the-testnet)
+    - [Prerequisites](#prerequisites)
+    - [Run a local testnet](#run-a-local-testnet)
+      - [Build the app](#build-the-app)
+    - [Setup the testnet](#setup-the-testnet)
     - [Spawn the nodes](#spawn-the-nodes)
   - [Usage for Rollups](#usage-for-rollups)
   - [🤝 Contributing](#-contributing)
@@ -84,20 +84,20 @@ The core primitives for the Data Availability Sampling are implemented in [FRI E
 
 ## 🎮 Getting Started
 
-### 📦 Prerequisites
+### Prerequisites
 
 - Rust 1.71.0 or later
 - Cargo
 
-### 🎮 Run a local testnet
+### Run a local testnet
 
-#### 📦 Build the app
+#### Build the app
 
 ```bash
 cargo build
 ```
 
-### 📦 Setup the testnet
+### Setup the testnet
 
 Generate configuration and genesis for three nodes using the `testnet` command:
 
