@@ -1,0 +1,73 @@
+name: Documentation
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - '.github/**'
+      - 'LICENSE'
+      - '.gitignore'
+  pull_request:
+    branches: [ main ]
+    paths-ignore:
+      - '.github/**'
+      - 'LICENSE'
+      - '.gitignore'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  docs:
+    name: Build and Deploy Docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+      
+      - name: Install mdbook
+        run: cargo install mdbook
+      
+      - name: Build API documentation
+        run: cargo doc --no-deps --document-private-items
+      
+      # If you have an mdbook documentation setup, uncomment these lines
+      # - name: Build mdBook documentation
+      #   run: |
+      #     cd docs
+      #     mdbook build
+      
+      - name: Combine documentation
+        if: github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p public
+          cp -r target/doc public/api
+          # If using mdbook, uncomment: cp -r docs/book/* public/
+          
+          # Create an index.html that redirects to API docs
+          cat > public/index.html << EOF
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <meta http-equiv="refresh" content="0;url=api/mikan/index.html">
+              <title>Mikan Documentation</title>
+            </head>
+            <body>
+              <p>Redirecting to <a href="api/mikan/index.html">API documentation</a>...</p>
+            </body>
+          </html>
+          EOF
+      
+      - name: Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          publish_branch: gh-pages
+          full_commit_message: 'docs: update documentation'
