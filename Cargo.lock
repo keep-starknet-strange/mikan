@@ -760,6 +760,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "config"
+version = "0.15.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "595aae20e65c3be792d05818e8c63025294ac3cb7e200f11459063a352a6ef80"
+dependencies = [
+ "pathdiff",
+ "serde",
+ "toml",
+ "winnow",
+]
+
+[[package]]
 name = "const-oid"
 version = "0.9.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2098,7 +2110,7 @@ version = "0.0.1"
 source = "git+https://github.com/informalsystems/malachite#98d410aa78a4e61180e8b44f47d9e1eee1a1688d"
 dependencies = [
  "bytesize",
- "config",
+ "config 0.14.1",
  "humantime-serde",
  "informalsystems-malachitebft-core-types",
  "multiaddr",
@@ -2991,7 +3003,7 @@ dependencies = [
  "async-trait",
  "bytes",
  "color-eyre",
- "config",
+ "config 0.15.11",
  "derive-where",
  "eyre",
  "frieda",
