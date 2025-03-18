@@ -21,6 +21,8 @@
       FRIEDA LIB
     </a>
   </h3>
+
+  <img src="./docs/img/mikan.png" alt="Mikan" width="300">
 </div>
 
 Mikan is a ZK-Rollup friendly data availability layer built on the Malachite consensus framework.
@@ -151,3 +153,17 @@ This project is licensed under the [MIT License](LICENSE).
 - [A Guide to Selecting the Right Data Availability Layer](https://blog.availproject.org/a-guide-to-selecting-the-right-data-availability-layer/)
 - [M31 arithmetic opcodes for efficient STARK verification on Bitcoin](https://hackmd.io/@abdelhamid/m31-opcodes-bitcoin-stark)
 - [Malachite - Flexible BFT consensus engine in Rust](https://github.com/informalsystems/malachite)
+
+---
+
+Started with love by [AbdelStark](https://github.com/AbdelStark) 🧡
+
+Feel free to follow me on Nostr if you’d like, using my public key:
+
+```text
+npub1hr6v96g0phtxwys4x0tm3khawuuykz6s28uzwtj5j0zc7lunu99snw2e29
+```
+
+Or just **scan this QR code** to find me:
+
+![Nostr Public Key QR Code](https://hackmd.io/_uploads/SkAvwlYYC.png)
