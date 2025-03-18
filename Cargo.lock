@@ -3013,7 +3013,7 @@ dependencies = [
  "informalsystems-malachitebft-test-cli",
  "itertools 0.13.0",
  "prost",
- "rand 0.9.0",
+ "rand 0.8.5",
  "redb",
  "serde",
  "serde_json",
