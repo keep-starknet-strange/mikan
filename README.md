@@ -35,6 +35,8 @@ compatible with the FRI commitment scheme, and by eliminating the need for a tru
 > Name origin 🍊 (蜜柑):
 >
 > Officially known as a Citrus unshiu or unshiu mikan, mikan is a type of mandarin orange and citrus fruit that originated in southern Japan approximately 400 years ago.
+>
+> Bitcoin goes necessarily with the orange color, so naturally a DA layer for Bitcoin L2s should be orange, and the Japanese connection is a Satoshi style touch.
 
 ## 💼 Table of Contents
 
