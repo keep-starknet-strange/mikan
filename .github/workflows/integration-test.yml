@@ -2,17 +2,17 @@ name: Integration Test
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths-ignore:
-      - '**.md'
-      - 'LICENSE'
-      - '.gitignore'
+      - "**.md"
+      - "LICENSE"
+      - ".gitignore"
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths-ignore:
-      - '**.md'
-      - 'LICENSE'
-      - '.gitignore'
+      - "**.md"
+      - "LICENSE"
+      - ".gitignore"
 
 env:
   CARGO_TERM_COLOR: always
@@ -24,35 +24,35 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@nightly
         with:
           toolchain: nightly
-      
+
       - name: Install protobuf compiler
         run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
-      
+
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
-      
+
       - name: Build
         run: cargo build
-      
+
       - name: Setup testnet
         run: cargo run -- testnet --nodes 3 --home nodes
-      
+
       - name: Start nodes and validate
         run: |
           # Start the nodes in the background
           bash spawn.bash --nodes 3 --home nodes &
-          
+
           # Save the PID to kill it later
           SPAWN_PID=$!
-          
+
           # Wait for nodes to start and produce some blocks
           sleep 30
-          
+
           # Check if logs contain successful block production
           if grep -q "Decided on a value" nodes/*/logs/node.log; then
             echo "Testnet is producing blocks successfully"

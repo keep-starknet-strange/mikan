@@ -2,17 +2,17 @@ name: Documentation
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths-ignore:
-      - '.github/**'
-      - 'LICENSE'
-      - '.gitignore'
+      - ".github/**"
+      - "LICENSE"
+      - ".gitignore"
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths-ignore:
-      - '.github/**'
-      - 'LICENSE'
-      - '.gitignore'
+      - ".github/**"
+      - "LICENSE"
+      - ".gitignore"
 
 env:
   CARGO_TERM_COLOR: always
@@ -23,34 +23,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@nightly
         with:
           toolchain: nightly
-      
+
       - name: Install protobuf compiler
         run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
-      
+
       - name: Install mdbook
         run: cargo install mdbook
-      
+
       - name: Build API documentation
         run: cargo doc --no-deps --document-private-items
-      
+
       # If you have an mdbook documentation setup, uncomment these lines
       # - name: Build mdBook documentation
       #   run: |
       #     cd docs
       #     mdbook build
-      
+
       - name: Combine documentation
         if: github.ref == 'refs/heads/main'
         run: |
           mkdir -p public
           cp -r target/doc public/api
           # If using mdbook, uncomment: cp -r docs/book/* public/
-          
+
           # Create an index.html that redirects to API docs
           cat > public/index.html << EOF
           <!DOCTYPE html>
@@ -65,7 +65,7 @@ jobs:
             </body>
           </html>
           EOF
-      
+
       - name: Deploy to GitHub Pages
         if: github.ref == 'refs/heads/main'
         uses: peaceiris/actions-gh-pages@v3
@@ -73,4 +73,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./public
           publish_branch: gh-pages
-          full_commit_message: 'docs: update documentation'
+          full_commit_message: "docs: update documentation"
