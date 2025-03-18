@@ -38,6 +38,22 @@ jobs:
         with:
           toolchain: stable
           target: ${{ matrix.job.target }}
+          
+      - name: Install protobuf compiler on Linux/macOS
+        if: runner.os == 'Linux' || runner.os == 'macOS'
+        run: |
+          if [ "${{ runner.os }}" == "Linux" ]; then
+            sudo apt-get update && sudo apt-get install -y protobuf-compiler
+          else
+            brew install protobuf
+          fi
+        shell: bash
+        
+      - name: Install protobuf compiler on Windows
+        if: runner.os == 'Windows'
+        run: |
+          choco install protoc
+        shell: cmd
 
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2

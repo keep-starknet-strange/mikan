@@ -30,6 +30,9 @@ jobs:
         with:
           toolchain: stable
       
+      - name: Install protobuf compiler
+        run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
+      
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
       

@@ -1,4 +1,27 @@
+<div align="center">
+
+<a href="https://github.com/AbdelStark/bitcoin-mcp/actions/workflows/ci.yml"><img alt="GitHub Workflow Status" src="https://img.shields.io/github/actions/workflow/status/AbdelStark/mikan/ci.yml?style=for-the-badge" height=30></a>
+<a href="https://bitcoin.org/"> <img alt="Bitcoin" src="https://img.shields.io/badge/Bitcoin-000?style=for-the-badge&logo=bitcoin&logoColor=white" height=30></a>
+
+</div>
+
 # Mikan 🍊: The ZK Friendly DA Layer for Bitcoin L2s
+
+<div align="center">
+  <h3>
+    <a href="https://github.com/AbdelStark/mikan">
+      DOCS
+    </a>
+    <span> | </span>
+    <a href="https://eprint.iacr.org/2024/248">
+      FRIDA PAPER
+    </a>
+    <span> | </span>
+    <a href="https://github.com/keep-starknet-strange/frieda">
+      FRIEDA LIB
+    </a>
+  </h3>
+</div>
 
 Mikan is a ZK-Rollup friendly data availability layer built on the Malachite consensus framework.
 It provides strong data availability guarantees using STARK-friendly cryptographic primitives
@@ -11,7 +34,26 @@ compatible with the FRI commitment scheme, and by eliminating the need for a tru
 >
 > Officially known as a Citrus unshiu or unshiu mikan, mikan is a type of mandarin orange and citrus fruit that originated in southern Japan approximately 400 years ago.
 
-## Key Features
+## 💼 Table of Contents
+
+- [Mikan 🍊: The ZK Friendly DA Layer for Bitcoin L2s](#mikan--the-zk-friendly-da-layer-for-bitcoin-l2s)
+  - [💼 Table of Contents](#-table-of-contents)
+  - [🔧 Key Features](#-key-features)
+  - [📐 Architecture](#-architecture)
+    - [🔑 Cryptographic Components](#-cryptographic-components)
+  - [🎮 Getting Started](#-getting-started)
+    - [📦 Prerequisites](#-prerequisites)
+    - [🎮 Run a local testnet](#-run-a-local-testnet)
+      - [📦 Build the app](#-build-the-app)
+    - [📦 Setup the testnet](#-setup-the-testnet)
+    - [Spawn the nodes](#spawn-the-nodes)
+  - [Usage for Rollups](#usage-for-rollups)
+  - [🤝 Contributing](#-contributing)
+  - [🗺️ Roadmap](#️-roadmap)
+  - [📝 License](#-license)
+  - [📚 References](#-references)
+
+## 🔧 Key Features
 
 - **No Trusted Setup**: Unlike solutions using KZG commitments, Mikan relies on transparent
   cryptography based on the FRI protocol, eliminating the need for trusted setup ceremonies.
@@ -23,7 +65,7 @@ compatible with the FRI commitment scheme, and by eliminating the need for a tru
 - **Fast Consensus**: Built on the Malachite BFT consensus framework, which provides
   high throughput and quick finality.
 
-## Architecture
+## 📐 Architecture
 
 Mikan consists of the following components:
 
@@ -32,7 +74,7 @@ Mikan consists of the following components:
 3. **Network Layer**: Ensures quick propagation of proposal parts across the network.
 4. **API**: Allows rollups to submit data and retrieve availability certificates.
 
-### Cryptographic Components
+### 🔑 Cryptographic Components
 
 - **FRI Protocol**: Fast Reed-Solomon Interactive Oracle Proof for data availability.
 - **M31 Field**: Uses the Mersenne prime 2^31-1 for efficient field arithmetic.
@@ -40,22 +82,22 @@ Mikan consists of the following components:
 
 The core primitives for the Data Availability Sampling are implemented in [FRI Extended for Data Availability: a FRI-based Data Availability Sampling library, written in Rust.](https://github.com/keep-starknet-strange/frieda).
 
-## Getting Started
+## 🎮 Getting Started
 
-### Prerequisites
+### 📦 Prerequisites
 
 - Rust 1.71.0 or later
 - Cargo
 
-### Run a local testnet
+### 🎮 Run a local testnet
 
-#### Build the app
+#### 📦 Build the app
 
 ```bash
 cargo build
 ```
 
-### Setup the testnet
+### 📦 Setup the testnet
 
 Generate configuration and genesis for three nodes using the `testnet` command:
 
@@ -90,19 +132,19 @@ Rollups can submit data to Mikan via its API:
 The FRI commitment can be included in the rollup's state transition proof, creating
 a seamless integration between the rollup's validity proofs and data availability guarantees.
 
-## Contributing
+## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## Roadmap
+## 🗺️ Roadmap
 
 See [ROADMAP.md](ROADMAP.md).
 
-## License
+## 📝 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the [MIT License](LICENSE).
 
-## References
+## 📚 References
 
 - [FRI Extended for Data Availability: a FRI-based Data Availability Sampling library, written in Rust.](https://github.com/keep-starknet-strange/frieda)
 - [FRIDA: Data Availability Sampling from FRI](https://eprint.iacr.org/2024/248)
