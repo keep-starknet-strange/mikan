@@ -23,9 +23,6 @@ compatible with the FRI commitment scheme, and by eliminating the need for a tru
 - **Fast Consensus**: Built on the Malachite BFT consensus framework, which provides
   high throughput and quick finality.
 
-- **Erasure Coding**: Data is erasure-coded with a 4x expansion factor, allowing data
-  availability to be verified by sampling just a small fraction of the total data.
-
 ## Architecture
 
 Mikan consists of the following components:
@@ -40,6 +37,8 @@ Mikan consists of the following components:
 - **FRI Protocol**: Fast Reed-Solomon Interactive Oracle Proof for data availability.
 - **M31 Field**: Uses the Mersenne prime 2^31-1 for efficient field arithmetic.
 - **Merkle Trees**: For efficient commitments and proofs.
+
+The core primitives for the Data Availability Sampling are implemented in [FRI Extended for Data Availability: a FRI-based Data Availability Sampling library, written in Rust.](https://github.com/keep-starknet-strange/frieda).
 
 ## Getting Started
 
@@ -93,7 +92,11 @@ a seamless integration between the rollup's validity proofs and data availabilit
 
 ## Contributing
 
-Contributions are welcome\! Please feel free to submit a Pull Request.
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## Roadmap
+
+See [ROADMAP.md](ROADMAP.md).
 
 ## License
 
@@ -101,6 +104,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## References
 
+- [FRI Extended for Data Availability: a FRI-based Data Availability Sampling library, written in Rust.](https://github.com/keep-starknet-strange/frieda)
 - [FRIDA: Data Availability Sampling from FRI](https://eprint.iacr.org/2024/248)
 - [A Guide to Selecting the Right Data Availability Layer](https://blog.availproject.org/a-guide-to-selecting-the-right-data-availability-layer/)
 - [M31 arithmetic opcodes for efficient STARK verification on Bitcoin](https://hackmd.io/@abdelhamid/m31-opcodes-bitcoin-stark)

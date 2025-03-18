@@ -21,3 +21,5 @@ CLAUDE.md
 
 # Malachite
 nodes/
+
+**/*.DS_Store
