@@ -54,7 +54,7 @@ jobs:
           sleep 30
 
           # Check if logs contain successful block production
-          if grep -q "Decided on a value" nodes/*/logs/node.log; then
+          if grep -q "height=3" nodes/*/logs/node.log; then
             echo "Testnet is producing blocks successfully"
             # Kill the spawned process
             kill $SPAWN_PID
