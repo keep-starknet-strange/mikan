@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug,Serialize,Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Header {
     pub block_number: usize,
     pub timestamp: usize,
@@ -8,6 +8,7 @@ pub struct Header {
     pub parent_hash: Vec<u8>,
 }
 
+#[allow(dead_code)]
 impl Header {
     /// Creates a new block header and computes its hash.
     pub fn new(block_number: usize, timestamp: usize, parent_hash: Vec<u8>) -> Self {
@@ -23,6 +24,6 @@ impl Header {
 
     ///Compute block hash
     pub fn compute_block_hash(&self) -> Vec<u8> {
-        !todo!()
+        todo!()
     }
 }

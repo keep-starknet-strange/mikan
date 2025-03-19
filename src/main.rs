@@ -16,6 +16,7 @@ use malachitebft_test_cli::cmd::testnet::TestnetCmd;
 use malachitebft_test_cli::{logging, runtime};
 
 mod app;
+mod blob;
 mod block;
 mod config;
 mod header;
