@@ -1,1 +1,1 @@
-mod frieda;
+pub mod frieda;
