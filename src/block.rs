@@ -19,6 +19,16 @@ pub struct Block {
     pub last_block_params: FinalityParams,
 }
 
+impl Default for Block {
+    fn default() -> Self {
+        Block {
+            header: Header::default(),
+            blobs: vec![],
+            da_commitment: commit(&[]).unwrap(),
+        }
+    }
+}
+
 #[allow(dead_code)]
 impl Block {
     /// Create a new block
