@@ -4,10 +4,9 @@
 use std::collections::{HashMap, HashSet};
 use std::time::Duration;
 
+use crate::block::Block;
 use bytes::{Bytes, BytesMut};
 use eyre::eyre;
-use rand::rngs::StdRng;
-use rand::{Rng, SeedableRng};
 use sha3::Digest;
 use tokio::time::sleep;
 use tracing::{debug, error, info};
@@ -41,13 +40,13 @@ pub struct State {
     address: Address,
     vote_extensions: HashMap<Height, VoteExtensions<TestContext>>,
     streams_map: PartStreamsMap,
-    rng: StdRng,
 
     pub store: Store,
     pub current_height: Height,
     pub current_round: Round,
     pub current_proposer: Option<Address>,
     pub peers: HashSet<PeerId>,
+    pub block: Block,
 }
 
 /// Represents errors that can occur during the verification of a proposal's signature.
@@ -66,18 +65,6 @@ enum SignatureVerificationError {
     InvalidSignature,
 }
 
-// Make up a seed for the rng based on our address in
-// order for each node to likely propose different values at
-// each round.
-fn seed_from_address(address: &Address) -> u64 {
-    address.into_inner().chunks(8).fold(0u64, |acc, chunk| {
-        let term = chunk.iter().fold(0u64, |acc, &x| {
-            acc.wrapping_shl(8).wrapping_add(u64::from(x))
-        });
-        acc.wrapping_add(term)
-    })
-}
-
 impl State {
     /// Creates a new State instance with the given validator address and starting height
     pub fn new(
@@ -87,6 +74,7 @@ impl State {
         address: Address,
         height: Height,
         store: Store,
+        block: Block,
     ) -> Self {
         Self {
             ctx,
@@ -99,8 +87,8 @@ impl State {
             store,
             vote_extensions: HashMap::new(),
             streams_map: PartStreamsMap::new(),
-            rng: StdRng::seed_from_u64(seed_from_address(&address)),
             peers: HashSet::new(),
+            block,
         }
     }
 
@@ -285,7 +273,8 @@ impl State {
     /// typically reaping transactions from a mempool and executing them against its state,
     /// before computing the merkle root of the new app state.
     fn make_value(&mut self, height: Height, _round: Round) -> Value {
-        let value = self.rng.gen_range(100..=100000);
+        let block_hash = self.block.header.block_hash.clone();
+        let value = u64::from_be_bytes(block_hash.as_slice().try_into().unwrap_or_default());
 
         // TODO: Where should we verify signatures?
         let extensions = self

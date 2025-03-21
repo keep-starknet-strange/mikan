@@ -1,17 +1,28 @@
 use crate::{blob::Blob, header::Header};
 use frieda::{
-    api::{sample, verify},
+    api::{commit, sample, verify},
     Commitment, FriProof, FriedaError, SampleResult,
 };
+
 #[allow(dead_code)]
-#[derive(Debug)]
-struct Block {
+#[derive(Clone, Debug)]
+pub struct Block {
     /// Block Header
     pub header: Header,
     /// Blobs
     pub blobs: Vec<Blob>,
     /// DA commitments
     pub da_commitment: Commitment,
+}
+
+impl Default for Block {
+    fn default() -> Self {
+        Block {
+            header: Header::default(),
+            blobs: vec![],
+            da_commitment: commit(&[]).unwrap(),
+        }
+    }
 }
 
 #[allow(dead_code)]
