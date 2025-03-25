@@ -33,9 +33,9 @@ impl Block {
             return Err(BlockError::InvalidBlockNumber(self.header.block_number))?;
         }
 
-        if self.last_block_params.hash() == self.header.parent_finality_hash {
+        if self.last_block_params.hash()? == self.header.parent_finality_hash {
             return Err(BlockError::FinalityHashMismatch(
-                self.last_block_params.hash(),
+                self.last_block_params.hash()?,
                 self.header.parent_finality_hash.clone(),
             )
             .into());
@@ -48,7 +48,7 @@ impl Block {
     /// populate the empty fields in `Header`
     pub fn populate(&mut self) -> eyre::Result<()> {
         if self.header.parent_finality_hash.is_empty() {
-            self.header.parent_finality_hash = self.last_block_params.hash();
+            self.header.parent_finality_hash = self.last_block_params.hash()?;
         }
 
         if self.header.data_hash.is_empty() {

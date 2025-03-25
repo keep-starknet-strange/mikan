@@ -9,7 +9,9 @@ pub enum BlockError {
     #[error("Invalid Block Number {0}")]
     InvalidBlockNumber(usize),
     #[error("Expected :{0:?}. Got: {1:?}")]
-    FinalityHashMismatch(Vec<u8>,Vec<u8>),
+    FinalityHashMismatch(Vec<u8>, Vec<u8>),
     #[error("Expected :{0:?}. Got: {1:?}")]
-    DataHashMismatch(Vec<u8>,Vec<u8>)
+    DataHashMismatch(Vec<u8>, Vec<u8>),
+    #[error("Merkle Tree Root calculation error")]
+    MerkleTreeError,
 }
