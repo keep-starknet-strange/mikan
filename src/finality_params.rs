@@ -1,8 +1,5 @@
 use crate::{error::BlockError, vote::Vote};
-use eyre::eyre;
-use hex::encode;
 use rs_merkle::{algorithms::Sha256, Hasher, MerkleTree};
-use sha3::{Digest, Sha3_256};
 
 #[derive(Debug)]
 pub struct FinalityParams {
@@ -19,8 +16,9 @@ impl FinalityParams {
         }
     }
 
-    // TODO: this should be a merkle root calculation of the `votes`
-    pub fn hash(&self) -> eyre::Result<Vec<u8>> {
+    /// Calculates the Merkle Tree Root of the `votes.signature` .
+    /// the leaves are SHA256 hashes of the signatures in `FinalityParams.votes`.
+    pub fn tree_root(&self) -> eyre::Result<Vec<u8>> {
         let leaves: Vec<[u8; 32]> = self
             .votes
             .iter()
@@ -33,23 +31,6 @@ impl FinalityParams {
             .root()
             .map(Vec::from)
             .ok_or(BlockError::MerkleTreeError)?)
-    }
-    pub fn hash_str(&self) -> eyre::Result<String> {
-        let leaves: Vec<[u8; 32]> = self
-            .votes
-            .iter()
-            .map(|x| Sha256::hash(&x.signature))
-            .collect();
-
-        for leaf in &leaves {
-            println!("{:?}", encode(leaf));
-        }
-
-        let merkle_tree = MerkleTree::<Sha256>::from_leaves(&leaves);
-
-        Ok(merkle_tree
-            .root_hex()
-            .ok_or(BlockError::NullParentFinalityHash)?)
     }
 
     pub fn get_tree(&self) -> eyre::Result<MerkleTree<Sha256>> {
@@ -69,7 +50,8 @@ impl FinalityParams {
             return Err(BlockError::InvalidBlockNumber(self.height).into());
         }
         for vote in &self.votes {
-            // TODO:Validate each signature belongs to the respective validator address
+            // TODO:Validate each signature belongs to the respective validator address i.e. ecdsa signature verification
+
             todo!()
         }
 
@@ -84,7 +66,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn mock_block_create() {
+    fn signature_merkle_tree_verification() {
         let vote_1 = Vote::new(mock_make_validator(), Vec::from("1234"), 2);
         let vote_2 = Vote::new(mock_make_validator(), Vec::from("5678"), 2);
         let vote_3 = Vote::new(mock_make_validator(), Vec::from("9012"), 2);
