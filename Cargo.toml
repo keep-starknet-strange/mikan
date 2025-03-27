@@ -12,6 +12,8 @@ categories = ["cryptography", "algorithms"]
 # Malachite dependencies
 malachitebft-app-channel = { version = "0.0.1", package = "informalsystems-malachitebft-app-channel", git = "https://github.com/informalsystems/malachite" }
 malachitebft-proto = { version = "0.0.1", package = "informalsystems-malachitebft-proto", git = "https://github.com/informalsystems/malachite" }
+malachitebft-core-types = { version = "0.0.1", package = "informalsystems-malachitebft-core-types", git = "https://github.com/informalsystems/malachite" }
+malachitebft-signing-ed25519 = { version = "0.0.1", package = "informalsystems-malachitebft-signing-ed25519", git = "https://github.com/informalsystems/malachite" }
 
 # Malachite test dependencies
 malachitebft-test = { version = "0.0.1", package = "informalsystems-malachitebft-test", git = "https://github.com/informalsystems/malachite" }
