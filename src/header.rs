@@ -1,9 +1,6 @@
 use std::vec;
 
-use frieda::{
-    api::{sample, verify},
-    Commitment, FriProof, FriedaError, SampleResult,
-};
+use frieda::{api::verify, commit::Commitment, proof::Proof};
 use malachitebft_proto::Protobuf;
 use malachitebft_test::{utils::validators::make_validators, Address};
 use serde::{Deserialize, Serialize};
@@ -14,6 +11,7 @@ use crate::{
     error::BlockError,
 };
 
+#[allow(clippy::too_many_arguments)]
 #[derive(Debug)]
 pub struct Header {
     pub block_number: usize,
@@ -37,6 +35,7 @@ pub struct Header {
 
 #[allow(dead_code)]
 impl Header {
+    #[allow(clippy::too_many_arguments)]
     /// Creates a new block header and computes its hash.
     pub fn new(
         block_number: usize,
@@ -103,13 +102,13 @@ impl Header {
     }
 
     /// Sample from the commitment
-    pub fn sample(&self) -> Result<SampleResult, FriedaError> {
-        sample(&self.da_commitment.clone().unwrap())
+    pub fn sample(&self) -> Result<(), BlockError> {
+        !todo!()
     }
 
     /// Verify the commitment against a proof
-    pub fn verify_data(&self, proof: FriProof) -> Result<bool, FriedaError> {
-        verify(&self.da_commitment.clone().unwrap(), &proof)
+    pub fn verify_data(&self, proof: Proof) -> bool {
+        verify(proof, None)
     }
 }
 
@@ -186,7 +185,7 @@ impl HeaderBuilder {
             self.last_block_number.unwrap(),
             self.data_hash.clone().unwrap_or_default(),
             self.proposer_address.unwrap(),
-            self.da_commitment.clone().unwrap(),
+            self.da_commitment.unwrap(),
             self.parent_finality_hash.clone().unwrap(),
             self.parent_hash.clone().unwrap(),
         )

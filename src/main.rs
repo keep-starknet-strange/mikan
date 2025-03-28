@@ -21,6 +21,7 @@ mod block;
 mod config;
 mod error;
 mod finality_params;
+mod frieda;
 mod header;
 mod metrics;
 mod node;

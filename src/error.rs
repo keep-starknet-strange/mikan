@@ -1,5 +1,6 @@
 use thiserror::Error;
 
+#[allow(dead_code)]
 #[derive(Debug, Error)]
 pub enum BlockError {
     #[error("Null Parent Hash")]
@@ -14,4 +15,6 @@ pub enum BlockError {
     DataHashMismatch(Vec<u8>, Vec<u8>),
     #[error("Merkle Tree Root calculation error")]
     MerkleTreeError,
+    #[error("{0}")]
+    FriedaError(String),
 }

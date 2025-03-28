@@ -18,7 +18,7 @@ malachitebft-test = { version = "0.0.1", package = "informalsystems-malachitebft
 malachitebft-test-cli = { version = "0.0.1", package = "informalsystems-malachitebft-test-cli", git = "https://github.com/informalsystems/malachite" }
 
 # FRIEDA dependencies
-frieda = { git = "https://github.com/keep-starknet-strange/frieda", rev = "9417981" }
+frieda = { git = "https://github.com/keep-starknet-strange/frieda" }
 
 # Other dependencies
 derive-where = "1.2.7"
@@ -40,3 +40,8 @@ tokio = "1.43.0"
 toml = "0.8.19"
 tracing = "0.1.41"
 rs_merkle = "1.5.0"
+
+[workspace.lints.clippy]
+assign_op_pattern = "allow"
+let_unit_value="allow"
+too_many_arguments = "allow"
