@@ -3044,8 +3044,11 @@ dependencies = [
  "informalsystems-malachitebft-test",
  "informalsystems-malachitebft-test-cli",
  "itertools 0.14.0",
+ "libp2p-yamux",
  "prost",
  "rand 0.8.5",
+ "rand_chacha 0.3.1",
+ "rand_core 0.6.4",
  "redb",
  "rs_merkle",
  "serde",
@@ -3055,6 +3058,7 @@ dependencies = [
  "tokio",
  "toml",
  "tracing",
+ "yamux 0.12.1",
 ]
 
 [[package]]
