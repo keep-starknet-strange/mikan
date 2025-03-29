@@ -3,7 +3,6 @@
 
 use std::path::PathBuf;
 
-use crate::block::Block;
 use async_trait::async_trait;
 use rand::{CryptoRng, RngCore};
 use tokio::task::JoinHandle;
@@ -151,16 +150,7 @@ impl Node for App {
 
         let store = Store::open(db_dir.join("store.db"), metrics)?;
         let start_height = self.start_height.unwrap_or(Height::INITIAL);
-        let block = Block::default();
-        let mut state = State::new(
-            ctx,
-            signing_provider,
-            genesis,
-            address,
-            start_height,
-            store,
-            block,
-        );
+        let mut state = State::new(ctx, signing_provider, genesis, address, start_height, store);
 
         let span = tracing::error_span!("node", moniker = %config.moniker);
         let app_handle = tokio::spawn(
