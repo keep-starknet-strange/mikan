@@ -2423,15 +2423,6 @@ dependencies = [
 
 [[package]]
 name = "itertools"
-version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "413ee7dfc52ee1a4949ceeb7dbc8a33f2d6c088194d9f922fb8318faf1f01186"
-dependencies = [
- "either",
-]
-
-[[package]]
-name = "itertools"
 version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2b192c782037fadd9cfa75548310488aabdbf3d2da73885b31bd0abd03351285"
@@ -3015,9 +3006,12 @@ dependencies = [
  "informalsystems-malachitebft-signing-ed25519",
  "informalsystems-malachitebft-test",
  "informalsystems-malachitebft-test-cli",
- "itertools 0.13.0",
+ "itertools 0.14.0",
+ "libp2p-yamux",
  "prost",
  "rand 0.8.5",
+ "rand_chacha 0.3.1",
+ "rand_core 0.6.4",
  "redb",
  "serde",
  "serde_json",
@@ -3026,6 +3020,7 @@ dependencies = [
  "tokio",
  "toml",
  "tracing",
+ "yamux 0.12.1",
 ]
 
 [[package]]
