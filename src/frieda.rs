@@ -6,13 +6,13 @@ use crate::error::BlockError;
 use frieda::api::verify;
 use frieda::commit::{commit, Commitment};
 use frieda::proof::Proof;
-
+#[allow(dead_code)]
 /// A FRI-based commitment for data availability sampling
 #[derive(Debug, Clone)]
 pub struct DaCommitment {
     commitment: Commitment,
 }
-
+#[allow(dead_code)]
 impl DaCommitment {
     /// Commit data
     pub fn commit(data: &[u8]) -> Result<Self, BlockError> {
@@ -51,7 +51,7 @@ mod tests {
 
     #[test]
     fn test_frieda() {
-        use frieda::api::{commit, generate_proof};
+        use frieda::api::commit;
         let data_size = 1024 * 32; // 32 KB
         let data: Vec<u8> = (0..data_size).map(|i| (i % 256) as u8).collect();
 

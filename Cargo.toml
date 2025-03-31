@@ -42,6 +42,4 @@ tracing = "0.1.41"
 rs_merkle = "1.5.0"
 
 [workspace.lints.clippy]
-assign_op_pattern = "allow"
-let_unit_value="allow"
 too_many_arguments = "allow"

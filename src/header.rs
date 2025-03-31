@@ -1,17 +1,10 @@
-use std::vec;
-
 use frieda::{api::verify, commit::Commitment, proof::Proof};
-use malachitebft_proto::Protobuf;
-use malachitebft_test::{utils::validators::make_validators, Address};
-use serde::{Deserialize, Serialize};
+use malachitebft_test::Address;
 use sha3::{Digest, Sha3_256};
 
-use crate::{
-    block::{mock_make_validator, Block},
-    error::BlockError,
-};
+use crate::{block::mock_make_validator, error::BlockError};
 
-#[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments, dead_code)]
 #[derive(Debug)]
 pub struct Header {
     pub block_number: usize,
@@ -50,7 +43,7 @@ impl Header {
         let mut header = Header {
             block_number,
             timestamp,
-            da_commitment: da_commitment,
+            da_commitment,
             last_block_number,
             parent_finality_hash,
             data_hash,
@@ -101,6 +94,7 @@ impl Header {
         result
     }
 
+    #[allow(unreachable_code)]
     /// Sample from the commitment
     pub fn sample(&self) -> Result<(), BlockError> {
         !todo!()
@@ -132,7 +126,7 @@ pub struct HeaderBuilder {
     /// address of proposer of this block.
     pub proposer_address: Option<Address>,
 }
-
+#[allow(dead_code)]
 impl HeaderBuilder {
     pub fn new() -> Self {
         Self::default()

@@ -1,19 +1,15 @@
 use crate::{error::BlockError, vote::Vote};
 use rs_merkle::{algorithms::Sha256, Hasher, MerkleTree};
-
 #[derive(Debug)]
 pub struct FinalityParams {
     pub height: usize,
     /// list of validators that voted on this block.
     pub votes: Vec<Vote>,
 }
-
+#[allow(dead_code)]
 impl FinalityParams {
     pub fn new(height: usize, votes: Vec<Vote>) -> Self {
-        Self {
-            height: height,
-            votes: votes,
-        }
+        Self { height, votes }
     }
 
     /// Calculates the Merkle Tree Root of the `votes.signature` .
@@ -49,7 +45,8 @@ impl FinalityParams {
         if self.height == 0 {
             return Err(BlockError::InvalidBlockNumber(self.height).into());
         }
-        for vote in &self.votes {
+
+        for _vote in &self.votes {
             // TODO:Validate each signature belongs to the respective validator address i.e. ecdsa signature verification
 
             todo!()

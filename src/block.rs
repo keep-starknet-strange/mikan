@@ -1,9 +1,7 @@
 use eyre::Ok;
-use hex::encode;
 use malachitebft_test::{Address, PrivateKey};
 use rand::{thread_rng, Rng};
 use rs_merkle::{algorithms::Sha256, Hasher, MerkleTree};
-use sha3::{Digest, Sha3_256};
 
 use crate::{blob::Blob, error::BlockError, finality_params::FinalityParams, header::Header};
 
@@ -97,10 +95,7 @@ impl Block {
 #[cfg(test)]
 mod tests {
 
-    use crate::{
-        header::{self, HeaderBuilder},
-        vote::Vote,
-    };
+    use crate::{header::HeaderBuilder, vote::Vote};
 
     use super::*;
 
@@ -137,7 +132,7 @@ pub fn mock_make_validator() -> Address {
     println!("{:?}", sk.public_key());
     Address::from_public_key(&sk.public_key())
 }
-
+#[allow(dead_code)]
 pub fn mock_make_blobs() -> Blob {
     let mut rng = thread_rng();
 
