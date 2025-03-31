@@ -19,12 +19,16 @@ mod app;
 mod blob;
 mod block;
 mod config;
+mod error;
+mod finality_params;
+mod frieda;
 mod header;
 mod metrics;
 mod node;
 mod state;
 mod store;
 mod streaming;
+mod vote;
 
 use node::App;
 
