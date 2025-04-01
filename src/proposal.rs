@@ -12,6 +12,7 @@ pub struct Proposal {
     pub validator_address: Address,
 }
 
+#[allow(dead_code)]
 impl Proposal {
     pub fn new(
         height: Height,

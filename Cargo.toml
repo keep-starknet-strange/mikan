@@ -20,7 +20,7 @@ malachitebft-test = { version = "0.0.1", package = "informalsystems-malachitebft
 malachitebft-test-cli = { version = "0.0.1", package = "informalsystems-malachitebft-test-cli", git = "https://github.com/informalsystems/malachite" }
 
 # FRIEDA dependencies
-frieda = { git = "https://github.com/keep-starknet-strange/frieda", rev = "9417981" }
+frieda = { git = "https://github.com/keep-starknet-strange/frieda" }
 
 # Other dependencies
 derive-where = "1.2.7"
@@ -29,7 +29,8 @@ bytes = { version = "1", default-features = false }
 color-eyre = "0.6"
 config = { version = "0.15", features = ["toml"], default-features = false }
 eyre = "0.6"
-itertools = "0.14.0"
+hex = "0.4.3"
+itertools = "0.13"
 prost = "0.13"
 rand = { version = "0.8.5", features = ["std_rng"] }
 rand_core = "0.6.4"
@@ -42,5 +43,7 @@ thiserror = { version = "2.0", default-features = false }
 tokio = "1.43.0"
 toml = "0.8.19"
 tracing = "0.1.41"
-libp2p-yamux = "0.47.0"
-yamux = "0.12.1"
+rs_merkle = "1.5.0"
+
+[workspace.lints.clippy]
+too_many_arguments = "allow"

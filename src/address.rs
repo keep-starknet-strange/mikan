@@ -10,6 +10,7 @@ use malachitebft_test::proto;
 #[serde(transparent)]
 pub struct Address([u8; Self::LENGTH]);
 
+#[allow(dead_code)]
 impl Address {
     const LENGTH: usize = 20;
 

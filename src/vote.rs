@@ -1,53 +1,47 @@
-use malachitebft_core_types::{NilOrVal, Round, SignedExtension, VoteType};
-
 use crate::address::Address;
 use crate::context::TestContext;
 use crate::height::Height;
 use crate::value::ValueId;
+use malachitebft_core_types::{NilOrVal, Round, SignedExtension, VoteType};
 
-pub use malachitebft_core_types::Extension;
-
-/// A vote for a value in a round
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[allow(dead_code)]
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub struct Vote {
-    pub typ: VoteType,
+    pub validator: Address,
+    pub signature: Vec<u8>,
+    pub block: usize,
     pub height: Height,
     pub round: Round,
-    pub value: NilOrVal<ValueId>,
+    pub typ: VoteType,
     pub validator_address: Address,
+    pub value: NilOrVal<ValueId>,
     pub extension: Option<SignedExtension<TestContext>>,
 }
 
+#[allow(dead_code)]
 impl Vote {
-    pub fn new_prevote(
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        validator: Address,
+        sig: Vec<u8>,
+        block: usize,
         height: Height,
         round: Round,
-        value: NilOrVal<ValueId>,
+        typ: VoteType,
         validator_address: Address,
-    ) -> Self {
-        Self {
-            typ: VoteType::Prevote,
-            height,
-            round,
-            value,
-            validator_address,
-            extension: None,
-        }
-    }
-
-    pub fn new_precommit(
-        height: Height,
-        round: Round,
         value: NilOrVal<ValueId>,
-        address: Address,
+        extension: Option<SignedExtension<TestContext>>,
     ) -> Self {
         Self {
-            typ: VoteType::Precommit,
+            validator,
+            signature: sig,
+            block,
             height,
             round,
+            typ,
+            validator_address,
             value,
-            validator_address: address,
-            extension: None,
+            extension,
         }
     }
 }

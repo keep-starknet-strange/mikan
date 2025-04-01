@@ -15,16 +15,29 @@ use malachitebft_test_cli::cmd::start::StartCmd;
 use malachitebft_test_cli::cmd::testnet::TestnetCmd;
 use malachitebft_test_cli::{logging, runtime};
 
+mod address;
 mod app;
 mod blob;
 mod block;
 mod config;
+mod context;
+mod error;
+mod finality_params;
+mod frieda;
 mod header;
+mod height;
 mod metrics;
 mod node;
+mod proposal;
+mod proposal_part;
+mod signing;
 mod state;
 mod store;
 mod streaming;
+mod validator;
+mod validator_set;
+mod value;
+mod vote;
 
 use node::App;
 
