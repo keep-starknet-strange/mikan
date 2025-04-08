@@ -14,8 +14,12 @@ impl Codec<Block> for ProtobufCodec {
         let proto = blockproto::Block::decode(bytes.as_ref())?;
 
         Ok(Block {
-            header: Header::from_proto(proto.header.unwrap()).unwrap(),
-            blobs: vec![Blob {}],
+            header: Header::from_proto(proto.header.unwrap())?,
+            blobs: proto
+                .blobs
+                .iter()
+                .map(|blob| Blob::from_proto(*blob).unwrap())
+                .collect(),
             last_block_params: FinalityParams {},
         })
     }
