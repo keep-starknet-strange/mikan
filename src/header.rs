@@ -138,7 +138,31 @@ impl Protobuf for Header {
         })
     }
 
-    fn to_proto(&self) -> Result<Self::Proto, malachitebft_proto::Error> {}
+    fn to_proto(&self) -> Result<Self::Proto, malachitebft_proto::Error> {
+        Ok(blockproto::Header {
+            block_number: self
+                .block_number
+                .try_into()
+                .expect("usize does not fit in u64 for block_number"),
+            timestamp: self
+                .timestamp
+                .try_into()
+                .expect("usize does not fit in u64 for timestamp"),
+            block_hash: self.block_hash.clone(),
+            da_commitment: match self.da_commitment {
+                Some(commitment) => Some(commitment.to_vec()),
+                None => None,
+            },
+            parent_hash: self.parent_hash.clone(),
+            parent_finality_hash: self.parent_finality_hash.clone(),
+            last_block_number: self
+                .last_block_number
+                .try_into()
+                .expect("usize does not fit in u64 for last_block_number"),
+            data_hash: self.data_hash.clone(),
+            proposer_address: self.proposer_address.into_inner().to_vec(),
+        })
+    }
 }
 
 #[derive(Debug, Default)]

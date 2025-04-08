@@ -15,43 +15,14 @@ impl Codec<Block> for ProtobufCodec {
 
         Ok(Block {
             header: Header::from_proto(proto.header.unwrap()).unwrap(),
-            blobs: vec![Blob {
-
-            }],
-            last_block_params: FinalityParams {
-
-            }
+            blobs: vec![Blob {}],
+            last_block_params: FinalityParams {},
         })
     }
 
     fn encode(&self, msg: &Block) -> Result<bytes::Bytes, Self::Error> {
         let proto = blockproto::Block {
-            header: Some(blockproto::Header {
-                block_number: msg
-                    .header
-                    .block_number
-                    .try_into()
-                    .expect("usize does not fit in u64 for block_number"),
-                timestamp: msg
-                    .header
-                    .timestamp
-                    .try_into()
-                    .expect("usize does not fit in u64 for timestamp"),
-                block_hash: msg.header.block_hash.clone(),
-                da_commitment: match msg.header.da_commitment {
-                    Some(commitment) => Some(commitment.to_vec()),
-                    None => None,
-                },
-                parent_hash: msg.header.parent_hash.clone(),
-                parent_finality_hash: msg.header.parent_finality_hash.clone(),
-                last_block_number: msg
-                    .header
-                    .last_block_number
-                    .try_into()
-                    .expect("usize does not fit in u64 for last_block_number"),
-                data_hash: msg.header.data_hash.clone(),
-                proposer_address: msg.header.proposer_address.into_inner().to_vec(),
-            }),
+            header: Some(msg.header.to_proto()?),
             blobs: msg
                 .blobs
                 .iter()
