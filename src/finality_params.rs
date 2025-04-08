@@ -80,7 +80,11 @@ impl Protobuf for FinalityParams {
                 .height
                 .try_into()
                 .expect("u64 does not fit in usize for FinalityParams.height"),
-            votes: vec![],
+            votes: proto
+                .votes
+                .iter()
+                .map(|vote| Vote::from_proto(vote.clone()).unwrap())
+                .collect(),
         };
 
         Ok(finality)
@@ -92,7 +96,11 @@ impl Protobuf for FinalityParams {
                 .height
                 .try_into()
                 .expect("usize does not fit in u64 for FinalityParams.height"),
-            votes: vec![],
+            votes: self
+                .votes
+                .iter()
+                .map(|vote| vote.to_proto().unwrap())
+                .collect(),
         };
 
         Ok(proto)
