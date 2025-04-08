@@ -18,9 +18,9 @@ impl Codec<Block> for ProtobufCodec {
             blobs: proto
                 .blobs
                 .iter()
-                .map(|blob| Blob::from_proto(*blob).unwrap())
+                .map(|blob| Blob::from_proto(blob.clone()).unwrap())
                 .collect(),
-            last_block_params: FinalityParams {},
+            last_block_params: FinalityParams::from_proto(proto.last_block_params.unwrap())?,
         })
     }
 
@@ -30,10 +30,7 @@ impl Codec<Block> for ProtobufCodec {
             blobs: msg
                 .blobs
                 .iter()
-                .map(|blob| blockproto::Blob {
-                    app_id: blob.app_id.clone(),
-                    data: blob.data.clone(),
-                })
+                .map(|blob| blob.to_proto().unwrap())
                 .collect(),
             last_block_params: Some(blockproto::FinalityParams {
                 height: msg
@@ -45,14 +42,7 @@ impl Codec<Block> for ProtobufCodec {
                     .last_block_params
                     .votes
                     .iter()
-                    .map(|vote| blockproto::Vote {
-                        validator: vote.validator.into_inner().to_vec(),
-                        signature: vote.signature.to_vec(),
-                        block: vote
-                            .block
-                            .try_into()
-                            .expect("usize does not fit in u64 for vote.block"),
-                    })
+                    .map(|vote| vote.to_proto().unwrap())
                     .collect(),
             }),
         };
