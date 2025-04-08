@@ -1,4 +1,6 @@
-use crate::{error::BlockError, vote::Vote};
+use crate::{block::blockproto, error::BlockError, vote::Vote};
+use malachitebft_proto::Protobuf;
+use prost::Name;
 use rs_merkle::{algorithms::Sha256, Hasher, MerkleTree};
 #[derive(Debug)]
 pub struct FinalityParams {
@@ -53,6 +55,47 @@ impl FinalityParams {
         }
 
         Ok(())
+    }
+}
+
+impl Name for blockproto::FinalityParams {
+    const NAME: &'static str = "FinalityParams";
+    const PACKAGE: &'static str = "mikan";
+
+    fn full_name() -> String {
+        "mikan.FinalityParams".into()
+    }
+
+    fn type_url() -> String {
+        "/mikan.FinalityParams".into()
+    }
+}
+
+impl Protobuf for FinalityParams {
+    type Proto = blockproto::FinalityParams;
+
+    fn from_proto(proto: Self::Proto) -> Result<Self, malachitebft_proto::Error> {
+        let finality = FinalityParams {
+            height: proto
+                .height
+                .try_into()
+                .expect("u64 does not fit in usize for FinalityParams.height"),
+            votes: vec![],
+        };
+
+        Ok(finality)
+    }
+
+    fn to_proto(&self) -> Result<Self::Proto, malachitebft_proto::Error> {
+        let proto = blockproto::FinalityParams {
+            height: self
+                .height
+                .try_into()
+                .expect("usize does not fit in u64 for FinalityParams.height"),
+            votes: vec![],
+        };
+
+        Ok(proto)
     }
 }
 
