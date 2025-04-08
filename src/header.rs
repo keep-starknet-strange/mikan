@@ -1,8 +1,12 @@
 use frieda::{api::verify, commit::Commitment, proof::Proof};
-use malachitebft_test::Address;
+use malachitebft_proto::Protobuf;
+use malachitebft_test::{proto, Address};
 use sha3::{Digest, Sha3_256};
 
-use crate::{block::mock_make_validator, error::BlockError};
+use crate::{
+    block::{blockproto, mock_make_validator},
+    error::BlockError,
+};
 
 #[allow(clippy::too_many_arguments, dead_code)]
 #[derive(Debug)]
@@ -104,6 +108,37 @@ impl Header {
     pub fn verify_data(&self, proof: Proof) -> bool {
         verify(proof, None)
     }
+}
+
+impl Protobuf for Header {
+    type Proto = blockproto::Header;
+
+    fn from_proto(proto: Self::Proto) -> Result<Self, malachitebft_proto::Error> {
+        Ok(Header {
+            block_number: proto
+                .block_number
+                .try_into()
+                .expect("u64 does not fit in usize for block_number"),
+            timestamp: proto
+                .timestamp
+                .try_into()
+                .expect("u64 does not fit in usize for timestamp"),
+            block_hash: proto.block_hash,
+            da_commitment: None,
+            parent_hash: proto.parent_hash,
+            parent_finality_hash: proto.parent_finality_hash,
+            last_block_number: proto
+                .last_block_number
+                .try_into()
+                .expect("u64 does not fit in usize for last_block_number"),
+            data_hash: proto.data_hash,
+            proposer_address: Address::from_proto(proto::Address {
+                value: proto.proposer_address.into(),
+            })?,
+        })
+    }
+
+    fn to_proto(&self) -> Result<Self::Proto, malachitebft_proto::Error> {}
 }
 
 #[derive(Debug, Default)]

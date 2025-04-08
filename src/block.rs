@@ -4,7 +4,7 @@ use rs_merkle::{algorithms::Sha256, Hasher, MerkleTree};
 
 use crate::{blob::Blob, error::BlockError, finality_params::FinalityParams, header::Header};
 
-mod blockproto;
+pub mod blockproto;
 mod codec;
 
 #[allow(dead_code)]

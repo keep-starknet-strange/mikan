@@ -1,17 +1,27 @@
 use bytes::Bytes;
 use malachitebft_app_channel::app::types::codec::Codec;
-use malachitebft_proto::Error as ProtoError;
+use malachitebft_proto::{Error as ProtoError, Protobuf};
 use malachitebft_test::codec::proto::ProtobufCodec;
 use prost::Message;
 
 use super::blockproto;
-use crate::block::Block;
+use crate::{blob::Blob, block::Block, finality_params::FinalityParams, header::Header};
 
 impl Codec<Block> for ProtobufCodec {
     type Error = ProtoError;
 
     fn decode(&self, bytes: bytes::Bytes) -> Result<Block, Self::Error> {
-        // let proto =
+        let proto = blockproto::Block::decode(bytes.as_ref())?;
+
+        Ok(Block {
+            header: Header::from_proto(proto.header.unwrap()).unwrap(),
+            blobs: vec![Blob {
+
+            }],
+            last_block_params: FinalityParams {
+
+            }
+        })
     }
 
     fn encode(&self, msg: &Block) -> Result<bytes::Bytes, Self::Error> {
