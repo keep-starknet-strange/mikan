@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package blockproto;
+
+message Block {
+    Header header = 1;
+    repeated Blob blobs = 2;
+    FinalityParams last_block_params = 3;
+}
+
+message Header {
+    uint64 block_number = 1;
+    uint64 timestamp = 2;
+    bytes block_hash = 3;
+    optional bytes da_commitment = 4;
+    bytes parent_hash = 5;
+    bytes parent_finality_hash = 6;
+    uint64 last_block_number = 7;
+    bytes data_hash = 8;
+    bytes proposer_address = 9;
+}
+
+message Blob {
+    bytes app_id = 1;
+    bytes data = 2;
+}
+
+message FinalityParams {
+    uint64 height = 1;
+    repeated Vote votes = 2;
+}
+
+message Vote {
+    bytes validator = 1;
+    bytes signature = 2;
+    uint64 block = 3;
+}
