@@ -114,28 +114,38 @@ impl Protobuf for Header {
     type Proto = blockproto::Header;
 
     fn from_proto(proto: Self::Proto) -> Result<Self, malachitebft_proto::Error> {
-        Ok(Header {
-            block_number: proto
-                .block_number
-                .try_into()
-                .expect("u64 does not fit in usize for block_number"),
-            timestamp: proto
-                .timestamp
-                .try_into()
-                .expect("u64 does not fit in usize for timestamp"),
-            block_hash: proto.block_hash,
-            da_commitment: None,
-            parent_hash: proto.parent_hash,
-            parent_finality_hash: proto.parent_finality_hash,
-            last_block_number: proto
-                .last_block_number
-                .try_into()
-                .expect("u64 does not fit in usize for last_block_number"),
-            data_hash: proto.data_hash,
-            proposer_address: Address::from_proto(proto::Address {
+        let builder = HeaderBuilder::new();
+        let builder = builder
+            .block_number(
+                proto
+                    .block_number
+                    .try_into()
+                    .expect("u64 does not fit in usize for block_number"),
+            )
+            .timestamp(
+                proto
+                    .timestamp
+                    .try_into()
+                    .expect("u64 does not fit in usize for timestamp"),
+            )
+            .block_hash(proto.block_hash)
+            .da_commitment(None)
+            .parent_hash(proto.parent_hash)
+            .parent_finality_hash(proto.parent_finality_hash)
+            .last_block_number(
+                proto
+                    .last_block_number
+                    .try_into()
+                    .expect("u64 does not fit in usize for last_block_number"),
+            )
+            .data_hash(proto.data_hash)
+            .proposer_address(Address::from_proto(proto::Address {
                 value: proto.proposer_address.into(),
-            })?,
-        })
+            })?);
+
+        let header = builder.build();
+        
+        Ok(header)
     }
 
     fn to_proto(&self) -> Result<Self::Proto, malachitebft_proto::Error> {
