@@ -1,6 +1,7 @@
 use frieda::{api::verify, commit::Commitment, proof::Proof};
 use malachitebft_proto::Protobuf;
 use malachitebft_test::{proto, Address};
+use prost::Name;
 use sha3::{Digest, Sha3_256};
 
 use crate::{
@@ -110,6 +111,19 @@ impl Header {
     }
 }
 
+impl Name for blockproto::Header {
+    const NAME: &'static str = "Header";
+    const PACKAGE: &'static str = "mikan";
+
+    fn full_name() -> String {
+        "mikan.Header".into()
+    }
+
+    fn type_url() -> String {
+        "/mikan.Header".into()
+    }
+}
+
 impl Protobuf for Header {
     type Proto = blockproto::Header;
 
@@ -144,12 +158,12 @@ impl Protobuf for Header {
             })?);
 
         let header = builder.build();
-        
+
         Ok(header)
     }
 
     fn to_proto(&self) -> Result<Self::Proto, malachitebft_proto::Error> {
-        Ok(blockproto::Header {
+        let proto = blockproto::Header {
             block_number: self
                 .block_number
                 .try_into()
@@ -171,7 +185,9 @@ impl Protobuf for Header {
                 .expect("usize does not fit in u64 for last_block_number"),
             data_hash: self.data_hash.clone(),
             proposer_address: self.proposer_address.into_inner().to_vec(),
-        })
+        };
+
+        Ok(proto)
     }
 }
 
