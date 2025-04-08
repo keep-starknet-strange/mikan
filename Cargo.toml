@@ -41,5 +41,8 @@ toml = "0.8.19"
 tracing = "0.1.41"
 rs_merkle = "1.5.0"
 
+[build-dependencies]
+prost-build = "0.13.5"
+
 [workspace.lints.clippy]
 too_many_arguments = "allow"
