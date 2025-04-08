@@ -4,6 +4,7 @@ use rand::{thread_rng, Rng};
 use rs_merkle::{algorithms::Sha256, Hasher, MerkleTree};
 
 use crate::{blob::Blob, error::BlockError, finality_params::FinalityParams, header::Header};
+pub mod blockproto;
 
 #[allow(dead_code)]
 #[derive(Debug)]

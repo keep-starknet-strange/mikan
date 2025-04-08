@@ -23,6 +23,7 @@ mod keys;
 use keys::{HeightKey, UndecidedValueKey};
 
 use crate::metrics::DbMetrics;
+use crate::block::blockproto;
 
 #[derive(Clone, Debug)]
 pub struct DecidedValue {
