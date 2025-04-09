@@ -1,9 +1,11 @@
-use eyre::Ok;
 use malachitebft_test::{Address, PrivateKey};
 use rand::{thread_rng, Rng};
 use rs_merkle::{algorithms::Sha256, Hasher, MerkleTree};
 
 use crate::{blob::Blob, error::BlockError, finality_params::FinalityParams, header::Header};
+
+pub mod blockproto;
+mod codec;
 
 #[allow(dead_code)]
 #[derive(Debug)]

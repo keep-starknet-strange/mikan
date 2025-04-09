@@ -7,6 +7,7 @@ license = "MIT"
 repository = "https://github.com/AbdelStark/mikan"
 keywords = ["cryptography", "data-availability", "fri", "erasure-coding"]
 categories = ["cryptography", "algorithms"]
+build = "./src/build.rs"
 
 [dependencies]
 # Malachite dependencies
@@ -40,6 +41,9 @@ tokio = "1.43.0"
 toml = "0.8.19"
 tracing = "0.1.41"
 rs_merkle = "1.5.0"
+
+[build-dependencies]
+prost-build = "0.13"
 
 [workspace.lints.clippy]
 too_many_arguments = "allow"

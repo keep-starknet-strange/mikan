@@ -3029,6 +3029,7 @@ dependencies = [
  "informalsystems-malachitebft-test-cli",
  "itertools 0.13.0",
  "prost",
+ "prost-build",
  "rand 0.8.5",
  "redb",
  "rs_merkle",

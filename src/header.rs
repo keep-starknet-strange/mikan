@@ -1,8 +1,13 @@
 use frieda::{api::verify, commit::Commitment, proof::Proof};
-use malachitebft_test::Address;
+use malachitebft_proto::Protobuf;
+use malachitebft_test::{proto, Address};
+use prost::Name;
 use sha3::{Digest, Sha3_256};
 
-use crate::{block::mock_make_validator, error::BlockError};
+use crate::{
+    block::{blockproto, mock_make_validator},
+    error::BlockError,
+};
 
 #[allow(clippy::too_many_arguments, dead_code)]
 #[derive(Debug)]
@@ -103,6 +108,86 @@ impl Header {
     /// Verify the commitment against a proof
     pub fn verify_data(&self, proof: Proof) -> bool {
         verify(proof, None)
+    }
+}
+
+impl Name for blockproto::Header {
+    const NAME: &'static str = "Header";
+    const PACKAGE: &'static str = "mikan";
+
+    fn full_name() -> String {
+        "mikan.Header".into()
+    }
+
+    fn type_url() -> String {
+        "/mikan.Header".into()
+    }
+}
+
+impl Protobuf for Header {
+    type Proto = blockproto::Header;
+
+    fn from_proto(proto: Self::Proto) -> Result<Self, malachitebft_proto::Error> {
+        let builder = HeaderBuilder::new();
+        let builder = builder
+            .block_number(
+                proto
+                    .block_number
+                    .try_into()
+                    .expect("u64 does not fit in usize for block_number"),
+            )
+            .timestamp(
+                proto
+                    .timestamp
+                    .try_into()
+                    .expect("u64 does not fit in usize for timestamp"),
+            )
+            .block_hash(proto.block_hash)
+            .da_commitment(None)
+            .parent_hash(proto.parent_hash)
+            .parent_finality_hash(proto.parent_finality_hash)
+            .last_block_number(
+                proto
+                    .last_block_number
+                    .try_into()
+                    .expect("u64 does not fit in usize for last_block_number"),
+            )
+            .data_hash(proto.data_hash)
+            .proposer_address(Address::from_proto(proto::Address {
+                value: proto.proposer_address.into(),
+            })?);
+
+        let header = builder.build();
+
+        Ok(header)
+    }
+
+    fn to_proto(&self) -> Result<Self::Proto, malachitebft_proto::Error> {
+        let proto = blockproto::Header {
+            block_number: self
+                .block_number
+                .try_into()
+                .expect("usize does not fit in u64 for block_number"),
+            timestamp: self
+                .timestamp
+                .try_into()
+                .expect("usize does not fit in u64 for timestamp"),
+            block_hash: self.block_hash.clone(),
+            da_commitment: match self.da_commitment {
+                Some(commitment) => Some(commitment.to_vec()),
+                None => None,
+            },
+            parent_hash: self.parent_hash.clone(),
+            parent_finality_hash: self.parent_finality_hash.clone(),
+            last_block_number: self
+                .last_block_number
+                .try_into()
+                .expect("usize does not fit in u64 for last_block_number"),
+            data_hash: self.data_hash.clone(),
+            proposer_address: self.proposer_address.into_inner().to_vec(),
+        };
+
+        Ok(proto)
     }
 }
 
