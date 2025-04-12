@@ -26,7 +26,6 @@ bytes = { version = "1", default-features = false }
 color-eyre = "0.6"
 config = { version = "0.15", features = ["toml"], default-features = false }
 eyre = "0.6"
-hex = "0.4.3"
 itertools = "0.14"
 prost = "0.13"
 rand = { version = "0.8.5", features = ["std_rng"] }
@@ -39,7 +38,7 @@ tokio = "1.43.0"
 toml = "0.8.19"
 tracing = "0.1.41"
 rs_merkle = "1.5.0"
-
+bincode = { version = "2.0.1", features = ["alloc", "serde"] }
 
 [workspace.lints.clippy]
 too_many_arguments = "allow"

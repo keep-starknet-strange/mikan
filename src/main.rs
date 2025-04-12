@@ -27,6 +27,7 @@ mod node;
 mod state;
 mod store;
 mod streaming;
+mod tables;
 mod vote;
 
 use node::App;

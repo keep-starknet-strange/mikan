@@ -1,12 +1,14 @@
+use bincode::{Decode, Encode};
 use eyre::Ok;
 use malachitebft_test::{Address, PrivateKey};
 use rand::{thread_rng, Rng};
 use rs_merkle::{algorithms::Sha256, Hasher, MerkleTree};
+use serde::{Deserialize, Serialize};
 
 use crate::{blob::Blob, error::BlockError, finality_params::FinalityParams, header::Header};
 
 #[allow(dead_code)]
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize, Encode, Decode)]
 pub struct Block {
     /// Block Header.
     pub header: Header,
