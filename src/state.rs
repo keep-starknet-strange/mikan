@@ -34,7 +34,7 @@ const HISTORY_LENGTH: u64 = 100;
 /// Represents the internal state of the application node
 /// Contains information about current height, round, proposals and blocks
 pub struct State {
-    #[allow(dead_code)]
+    
     ctx: TestContext,
     signing_provider: Ed25519Provider,
     genesis: Genesis,

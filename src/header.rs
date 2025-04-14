@@ -29,7 +29,7 @@ pub struct Header {
     pub proposer_address: Address,
 }
 
-#[allow(dead_code)]
+
 impl Header {
     #[allow(clippy::too_many_arguments)]
     /// Creates a new block header and computes its hash.
@@ -129,7 +129,7 @@ pub struct HeaderBuilder {
     /// address of proposer of this block.
     pub proposer_address: Option<Address>,
 }
-#[allow(dead_code)]
+
 impl HeaderBuilder {
     pub fn new() -> Self {
         Self::default()

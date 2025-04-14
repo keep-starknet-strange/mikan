@@ -6,9 +6,10 @@ use serde::{Deserialize, Serialize};
 pub struct FinalityParams {
     pub height: usize,
     /// list of validators that voted on this block.
+    #[bincode(with_serde)]
     pub votes: Vec<Vote>,
 }
-#[allow(dead_code)]
+
 impl FinalityParams {
     pub fn new(height: usize, votes: Vec<Vote>) -> Self {
         Self { height, votes }
@@ -60,16 +61,59 @@ impl FinalityParams {
 
 #[cfg(test)]
 mod tests {
+    use crate::height::Height;
     use crate::{block::mock_make_validator, vote::Vote};
+    use malachitebft_core_types::{NilOrVal, Round, VoteType};
 
     use super::*;
 
     #[test]
     fn signature_merkle_tree_verification() {
-        let vote_1 = Vote::new(mock_make_validator(), Vec::from("1234"), 2);
-        let vote_2 = Vote::new(mock_make_validator(), Vec::from("5678"), 2);
-        let vote_3 = Vote::new(mock_make_validator(), Vec::from("9012"), 2);
-        let vote_4 = Vote::new(mock_make_validator(), Vec::from("3456"), 2);
+        let proposer = mock_make_validator();
+        let vote_1 = Vote::new(
+            mock_make_validator(),
+            Vec::from("1234"),
+            2,
+            Height::new(2),
+            Round::new(0),
+            VoteType::Prevote,
+            proposer,
+            NilOrVal::Nil,
+            None,
+        );
+        let vote_2 = Vote::new(
+            mock_make_validator(),
+            Vec::from("5678"),
+            2,
+            Height::new(2),
+            Round::new(0),
+            VoteType::Prevote,
+            proposer,
+            NilOrVal::Nil,
+            None,
+        );
+        let vote_3 = Vote::new(
+            mock_make_validator(),
+            Vec::from("9012"),
+            2,
+            Height::new(2),
+            Round::new(0),
+            VoteType::Prevote,
+            proposer,
+            NilOrVal::Nil,
+            None,
+        );
+        let vote_4 = Vote::new(
+            mock_make_validator(),
+            Vec::from("3456"),
+            2,
+            Height::new(2),
+            Round::new(0),
+            VoteType::Prevote,
+            proposer,
+            NilOrVal::Nil,
+            None,
+        );
 
         let finality_param =
             FinalityParams::new(2, [vote_1, vote_2.clone(), vote_3, vote_4].to_vec());

@@ -7,8 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{blob::Blob, error::BlockError, finality_params::FinalityParams, header::Header};
 
-#[allow(dead_code)]
-#[derive(Debug, Serialize, Deserialize, Encode, Decode)]
+#[derive(Debug, Encode, Decode)]
 pub struct Block {
     /// Block Header.
     pub header: Header,
@@ -19,7 +18,6 @@ pub struct Block {
     pub last_block_params: FinalityParams,
 }
 
-#[allow(dead_code)]
 impl Block {
     /// Create a new block
     pub fn new(header: Header, blobs: Vec<Blob>, last_block_params: FinalityParams) -> Self {
@@ -96,17 +94,47 @@ impl Block {
 
 #[cfg(test)]
 mod tests {
-
-    use crate::{header::HeaderBuilder, vote::Vote};
-
     use super::*;
+    use crate::height::Height;
+    use crate::{header::HeaderBuilder, vote::Vote};
+    use malachitebft_core_types::{NilOrVal, Round, VoteType};
 
     #[test]
     fn mock_block_create() -> eyre::Result<()> {
         let proposer = mock_make_validator();
-        let vote_1 = Vote::new(mock_make_validator(), Vec::from("1234"), 2);
-        let vote_2 = Vote::new(mock_make_validator(), Vec::from("1234"), 2);
-        let vote_3 = Vote::new(mock_make_validator(), Vec::from("1234"), 2);
+        let vote_1 = Vote::new(
+            mock_make_validator(),
+            Vec::from("1234"),
+            2,
+            Height::new(2),
+            Round::new(0),
+            VoteType::Prevote,
+            proposer,
+            NilOrVal::Nil,
+            None,
+        );
+        let vote_2 = Vote::new(
+            mock_make_validator(),
+            Vec::from("1234"),
+            2,
+            Height::new(2),
+            Round::new(0),
+            VoteType::Prevote,
+            proposer,
+            NilOrVal::Nil,
+            None,
+        );
+        let vote_3 = Vote::new(
+            mock_make_validator(),
+            Vec::from("1234"),
+            2,
+            Height::new(2),
+            Round::new(0),
+            VoteType::Prevote,
+            proposer,
+            NilOrVal::Nil,
+            None,
+        );
 
         let parent_finality_hash_block_2 = FinalityParams::new(2, vec![vote_1, vote_2, vote_3]);
         let blobs = vec![mock_make_blobs(), mock_make_blobs()];
@@ -134,7 +162,7 @@ pub fn mock_make_validator() -> Address {
     println!("{:?}", sk.public_key());
     Address::from_public_key(&sk.public_key())
 }
-#[allow(dead_code)]
+
 pub fn mock_make_blobs() -> Blob {
     let mut rng = thread_rng();
 

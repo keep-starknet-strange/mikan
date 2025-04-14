@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-#[allow(dead_code)]
+
 #[derive(Debug, Error)]
 pub enum BlockError {
     #[error("Null Parent Hash")]
