@@ -17,8 +17,7 @@ malachitebft-proto = { version = "0.0.1", package = "informalsystems-malachitebf
 malachitebft-test = { version = "0.0.1", package = "informalsystems-malachitebft-test", git = "https://github.com/informalsystems/malachite" }
 malachitebft-test-cli = { version = "0.0.1", package = "informalsystems-malachitebft-test-cli", git = "https://github.com/informalsystems/malachite" }
 
-# FRIEDA dependencies
-frieda = { git = "https://github.com/keep-starknet-strange/frieda" }
+frieda = { git = "https://github.com/keep-starknet-strange/frieda", rev = "54fc496" } # FRIEDA dependencies
 
 # Other dependencies
 derive-where = "1.2.7"
