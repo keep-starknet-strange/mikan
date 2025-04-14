@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
 use malachitebft_core_types::VotingPower;
+use malachitebft_test::Address;
 use serde::{Deserialize, Serialize};
 
-use crate::address::Address;
 use crate::context::TestContext;
 use crate::signing::PublicKey;
 
@@ -15,7 +15,7 @@ pub struct Validator {
     pub voting_power: VotingPower,
 }
 
-#[allow(dead_code)]
+
 impl Validator {
     pub fn new(public_key: PublicKey, voting_power: VotingPower) -> Self {
         Self {
@@ -58,7 +58,7 @@ pub struct ValidatorSet {
     pub validators: Arc<Vec<Validator>>,
 }
 
-#[allow(dead_code)]
+
 impl ValidatorSet {
     pub fn new(validators: impl IntoIterator<Item = Validator>) -> Self {
         let mut validators: Vec<_> = validators.into_iter().collect();

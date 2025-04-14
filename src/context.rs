@@ -1,8 +1,8 @@
 use bytes::Bytes;
 use malachitebft_core_types::{Context, NilOrVal, Round, ValidatorSet as _};
+use malachitebft_test::Address;
 use malachitebft_test::Ed25519;
 
-use crate::address::*;
 use crate::height::*;
 use crate::proposal::*;
 use crate::proposal_part::*;
@@ -13,7 +13,7 @@ use crate::vote::*;
 #[derive(Copy, Clone, Debug, Default)]
 pub struct TestContext;
 
-#[allow(dead_code)]
+
 impl TestContext {
     pub fn new() -> Self {
         Self
@@ -54,30 +54,33 @@ impl Context for TestContext {
     }
 
     fn new_proposal(
-        _height: Height,
+        &self,
+        _height: Self::Height,
         _round: Round,
-        _value: Value,
+        _value: Self::Value,
         _pol_round: Round,
-        _address: Address,
-    ) -> Proposal {
-        unimplemented!()
+        _address: Self::Address,
+    ) -> Self::Proposal {
+        todo!()
     }
 
     fn new_prevote(
+        &self,
         _height: Self::Height,
         _round: Round,
-        _value_id: NilOrVal<ValueId>,
+        _value_id: NilOrVal<malachitebft_core_types::ValueId<Self>>,
         _address: Self::Address,
     ) -> Self::Vote {
-        unimplemented!()
+        todo!()
     }
 
     fn new_precommit(
+        &self,
         _height: Self::Height,
         _round: Round,
-        _value_id: NilOrVal<ValueId>,
+        _value_id: NilOrVal<malachitebft_core_types::ValueId<Self>>,
         _address: Self::Address,
     ) -> Self::Vote {
-        unimplemented!()
+        todo!()
     }
 }

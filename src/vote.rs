@@ -1,11 +1,18 @@
-use crate::address::Address;
 use crate::context::TestContext;
 use crate::height::Height;
 use crate::value::ValueId;
+use bincode::{
+    de::Decoder,
+    enc::Encoder,
+    error::{AllowedEnumVariants, DecodeError, EncodeError},
+    Decode, Encode,
+};
 use malachitebft_core_types::{NilOrVal, Round, SignedExtension, VoteType};
+use malachitebft_test::Address;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use std::fmt;
 
-#[allow(dead_code)]
-#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd)]
 pub struct Vote {
     pub validator: Address,
     pub signature: Vec<u8>,
@@ -18,7 +25,141 @@ pub struct Vote {
     pub extension: Option<SignedExtension<TestContext>>,
 }
 
-#[allow(dead_code)]
+impl Serialize for Vote {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let mut state = serializer.serialize_struct("Vote", 9)?;
+        state.serialize_field("validator", &self.validator)?;
+        state.serialize_field("signature", &self.signature)?;
+        state.serialize_field("block", &self.block)?;
+        state.serialize_field("height", &self.height)?;
+        state.serialize_field("round", &self.round.as_u32())?;
+        state.serialize_field("typ", &(self.typ as u8))?;
+        state.serialize_field("validator_address", &self.validator_address)?;
+        match &self.value {
+            NilOrVal::Nil => state.serialize_field("value", &("Nil", ()))?,
+            NilOrVal::Val(v) => state.serialize_field("value", &("Val", v))?,
+        }
+        state.serialize_field("extension", &Option::<()>::None)?;
+        state.end()
+    }
+}
+
+impl<'de> Deserialize<'de> for Vote {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(field_identifier, rename_all = "snake_case")]
+        enum Field {
+            Validator,
+            Signature,
+            Block,
+            Height,
+            Round,
+            Typ,
+            ValidatorAddress,
+            Value,
+            Extension,
+        }
+
+        struct VoteVisitor;
+        impl<'de> serde::de::Visitor<'de> for VoteVisitor {
+            type Value = Vote;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("struct Vote")
+            }
+
+            fn visit_map<V>(self, mut map: V) -> Result<Vote, V::Error>
+            where
+                V: serde::de::MapAccess<'de>,
+            {
+                let mut validator = None;
+                let mut signature = None;
+                let mut block = None;
+                let mut height = None;
+                let mut round = None;
+                let mut typ = None;
+                let mut validator_address = None;
+                let mut value = None;
+                let mut extension: Option<SignedExtension<TestContext>> = None;
+
+                while let Some(key) = map.next_key()? {
+                    match key {
+                        Field::Validator => validator = Some(map.next_value()?),
+                        Field::Signature => signature = Some(map.next_value()?),
+                        Field::Block => block = Some(map.next_value()?),
+                        Field::Height => height = Some(map.next_value()?),
+                        Field::Round => {
+                            let round_val: u32 = map.next_value()?;
+                            round = Some(Round::new(round_val));
+                        }
+                        Field::Typ => {
+                            let typ_val: u8 = map.next_value()?;
+                            typ = Some(unsafe { std::mem::transmute(typ_val) });
+                        }
+                        Field::ValidatorAddress => validator_address = Some(map.next_value()?),
+                        Field::Value => {
+                            let (variant, val): (String, ValueId) = map.next_value()?;
+                            value = Some(match variant.as_str() {
+                                "Nil" => NilOrVal::Nil,
+                                "Val" => NilOrVal::Val(val),
+                                _ => return Err(serde::de::Error::custom("invalid variant")),
+                            });
+                        }
+                        Field::Extension => {
+                            let _: Option<()> = map.next_value()?;
+                            extension = None;
+                        }
+                    }
+                }
+
+                let validator =
+                    validator.ok_or_else(|| serde::de::Error::missing_field("validator"))?;
+                let signature =
+                    signature.ok_or_else(|| serde::de::Error::missing_field("signature"))?;
+                let block = block.ok_or_else(|| serde::de::Error::missing_field("block"))?;
+                let height = height.ok_or_else(|| serde::de::Error::missing_field("height"))?;
+                let round = round.ok_or_else(|| serde::de::Error::missing_field("round"))?;
+                let typ = typ.ok_or_else(|| serde::de::Error::missing_field("typ"))?;
+                let validator_address = validator_address
+                    .ok_or_else(|| serde::de::Error::missing_field("validator_address"))?;
+                let value = value.ok_or_else(|| serde::de::Error::missing_field("value"))?;
+
+                Ok(Vote {
+                    validator,
+                    signature,
+                    block,
+                    height,
+                    round,
+                    typ,
+                    validator_address,
+                    value,
+                    extension,
+                })
+            }
+        }
+
+        const FIELDS: &[&str] = &[
+            "validator",
+            "signature",
+            "block",
+            "height",
+            "round",
+            "typ",
+            "validator_address",
+            "value",
+            "extension",
+        ];
+        deserializer.deserialize_struct("Vote", FIELDS, VoteVisitor)
+    }
+}
+
 impl Vote {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
@@ -84,5 +225,103 @@ impl malachitebft_core_types::Vote<TestContext> for Vote {
             extension: Some(extension),
             ..self
         }
+    }
+}
+
+impl Encode for Vote {
+    fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
+        self.validator.into_inner().encode(encoder)?;
+        self.signature.encode(encoder)?;
+        self.block.encode(encoder)?;
+        self.height.as_u64().encode(encoder)?;
+        self.round.as_u32().encode(encoder)?;
+
+        unsafe { std::mem::transmute::<VoteType, u8>(self.typ) }.encode(encoder)?;
+
+        self.validator_address.into_inner().encode(encoder)?;
+        match &self.value {
+            NilOrVal::Nil => None,
+            NilOrVal::Val(v) => Some(v.as_u64()),
+        }
+        .encode(encoder)?;
+        // Don't encode the extension field at all
+        Ok(())
+    }
+}
+
+impl<Context> Decode<Context> for Vote {
+    fn decode<D: Decoder<Context = Context>>(decoder: &mut D) -> Result<Self, DecodeError> {
+        let validator = Address::new(<[u8; 20]>::decode(decoder)?);
+
+        let signature = Vec::<u8>::decode(decoder)?;
+        let block = usize::decode(decoder)?;
+        let height = Height::new(u64::decode(decoder)?);
+        let round = match Option::<u32>::decode(decoder)? {
+            Some(val) => Round::new(val),
+            None => Round::Nil,
+        };
+
+        let typ = unsafe { std::mem::transmute::<u8, VoteType>(u8::decode(decoder)?) };
+
+        let validator_address = Address::new(<[u8; 20]>::decode(decoder)?);
+        let value = match Option::<u64>::decode(decoder)? {
+            Some(val) => NilOrVal::Val(ValueId::new(val)),
+            None => NilOrVal::Nil,
+        };
+
+        Ok(Vote {
+            validator,
+            signature,
+            block,
+            height,
+            round,
+            typ,
+            validator_address,
+            value,
+            extension: None,
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use malachitebft_core_types::VoteType;
+
+    fn create_test_vote() -> Vote {
+        Vote::new(
+            Address::new([1u8; 20]),
+            vec![2u8; 64],
+            1,
+            Height::new(100),
+            Round::new(2),
+            VoteType::Prevote,
+            Address::new([3u8; 20]),
+            NilOrVal::Nil,
+            None,
+        )
+    }
+
+    #[test]
+    fn test_vote_bincode_roundtrip() {
+        let vote = create_test_vote();
+        let config = bincode::config::standard();
+        let encoded = bincode::encode_to_vec(&vote, config).unwrap();
+        let (decoded, _): (Vote, _) = bincode::decode_from_slice(&encoded, config).unwrap();
+        assert_eq!(vote, decoded);
+    }
+
+    #[test]
+    fn test_vote_bincode_with_value() {
+        let mut vote = create_test_vote();
+        vote.value = NilOrVal::Val(ValueId::new(4));
+
+        let encoded = bincode::encode_to_vec(&vote, bincode::config::standard()).unwrap();
+        println!("Encoded bytes with value: {:?}", encoded);
+        let (decoded, _): (Vote, _) =
+            bincode::decode_from_slice(&encoded, bincode::config::standard()).unwrap();
+
+        assert_eq!(vote, decoded);
+        assert_eq!(vote.value, decoded.value);
     }
 }

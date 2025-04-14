@@ -1,19 +1,20 @@
 use core::fmt;
 
 use bytes::Bytes;
+use malachitebft_test::Address;
 use serde::{Deserialize, Serialize};
 
 use malachitebft_core_types::Round;
 use malachitebft_signing_ed25519::Signature;
 
-use crate::{address::Address, context::TestContext, height::Height};
+use crate::{context::TestContext, height::Height};
 
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ProposalData {
     pub bytes: Bytes,
 }
 
-#[allow(dead_code)]
+
 impl ProposalData {
     pub fn new(bytes: Bytes) -> Self {
         Self { bytes }
@@ -47,7 +48,7 @@ pub enum ProposalPart {
     Fin(ProposalFin),
 }
 
-#[allow(dead_code)]
+
 impl ProposalPart {
     pub fn get_type(&self) -> &'static str {
         match self {
@@ -81,7 +82,7 @@ pub struct ProposalInit {
     pub proposer: Address,
 }
 
-#[allow(dead_code)]
+
 impl ProposalInit {
     pub fn new(height: Height, round: Round, proposer: Address) -> Self {
         Self {
@@ -97,7 +98,7 @@ pub struct ProposalFin {
     pub signature: Signature,
 }
 
-#[allow(dead_code)]
+
 impl ProposalFin {
     pub fn new(signature: Signature) -> Self {
         Self { signature }

@@ -1,7 +1,7 @@
 use malachitebft_core_types::Round;
 
-use crate::{address::Address, context::TestContext, height::Height, value::Value};
-
+use crate::{context::TestContext, height::Height, value::Value};
+use malachitebft_test::Address;
 /// A proposal for a value in a round
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Proposal {
@@ -12,7 +12,7 @@ pub struct Proposal {
     pub validator_address: Address,
 }
 
-#[allow(dead_code)]
+
 impl Proposal {
     pub fn new(
         height: Height,

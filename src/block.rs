@@ -1,13 +1,13 @@
-use crate::address::Address;
+use bincode::{Decode, Encode};
 use eyre::Ok;
-use malachitebft_test::PrivateKey;
+use malachitebft_test::{Address, PrivateKey};
 use rand::{thread_rng, Rng};
 use rs_merkle::{algorithms::Sha256, Hasher, MerkleTree};
+use serde::{Deserialize, Serialize};
 
 use crate::{blob::Blob, error::BlockError, finality_params::FinalityParams, header::Header};
 
-#[allow(dead_code)]
-#[derive(Debug)]
+#[derive(Debug, Encode, Decode)]
 pub struct Block {
     /// Block Header.
     pub header: Header,
@@ -18,7 +18,6 @@ pub struct Block {
     pub last_block_params: FinalityParams,
 }
 
-#[allow(dead_code)]
 impl Block {
     /// Create a new block
     pub fn new(header: Header, blobs: Vec<Blob>, last_block_params: FinalityParams) -> Self {
@@ -163,7 +162,7 @@ pub fn mock_make_validator() -> Address {
     println!("{:?}", sk.public_key());
     Address::from_public_key(&sk.public_key())
 }
-#[allow(dead_code)]
+
 pub fn mock_make_blobs() -> Blob {
     let mut rng = thread_rng();
 

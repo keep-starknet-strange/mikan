@@ -7,8 +7,6 @@ use std::time::Instant;
 use bytes::Bytes;
 use prost::Message;
 use redb::ReadableTable;
-use thiserror::Error;
-use tracing::error;
 
 use malachitebft_app_channel::app::types::codec::Codec;
 use malachitebft_app_channel::app::types::core::{CommitCertificate, Round};
@@ -19,10 +17,9 @@ use malachitebft_test::codec::proto::ProtobufCodec;
 use malachitebft_test::proto;
 use malachitebft_test::{Height, TestContext, Value, ValueId};
 
-mod keys;
-use keys::{HeightKey, UndecidedValueKey};
-
+use crate::error::StoreError;
 use crate::metrics::DbMetrics;
+use crate::tables::keys::{HeightKey, UndecidedValueKey};
 
 #[derive(Clone, Debug)]
 pub struct DecidedValue {
@@ -38,30 +35,6 @@ fn decode_certificate(bytes: &[u8]) -> Result<CommitCertificate<TestContext>, Pr
 fn encode_certificate(certificate: &CommitCertificate<TestContext>) -> Result<Vec<u8>, ProtoError> {
     let proto = codec::encode_commit_certificate(certificate)?;
     Ok(proto.encode_to_vec())
-}
-
-#[derive(Debug, Error)]
-pub enum StoreError {
-    #[error("Database error: {0}")]
-    Database(#[from] redb::DatabaseError),
-
-    #[error("Storage error: {0}")]
-    Storage(#[from] redb::StorageError),
-
-    #[error("Table error: {0}")]
-    Table(#[from] redb::TableError),
-
-    #[error("Commit error: {0}")]
-    Commit(#[from] redb::CommitError),
-
-    #[error("Transaction error: {0}")]
-    Transaction(#[from] redb::TransactionError),
-
-    #[error("Failed to encode/decode Protobuf: {0}")]
-    Protobuf(#[from] ProtoError),
-
-    #[error("Failed to join on task: {0}")]
-    TaskJoin(#[from] tokio::task::JoinError),
 }
 
 const CERTIFICATES_TABLE: redb::TableDefinition<HeightKey, Vec<u8>> =
