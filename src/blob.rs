@@ -1,7 +1,8 @@
+use bincode::{Decode, Encode};
 use serde::{Deserialize, Serialize};
 
 #[allow(dead_code)]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Encode, Decode)]
 pub struct Blob {
     pub app_id: Vec<u8>,
     pub data: Vec<u8>,

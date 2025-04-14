@@ -1,11 +1,13 @@
+use bincode::{Decode, Encode};
 use frieda::{api::verify, commit::Commitment, proof::Proof};
 use malachitebft_test::Address;
+use serde::{Deserialize, Serialize};
 use sha3::{Digest, Sha3_256};
 
 use crate::{block::mock_make_validator, error::BlockError};
 
 #[allow(clippy::too_many_arguments, dead_code)]
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize, Encode, Decode)]
 pub struct Header {
     pub block_number: usize,
     pub timestamp: usize,
@@ -23,6 +25,7 @@ pub struct Header {
     /// Leaves of this tree will be the raw bytes of each blob
     pub data_hash: Vec<u8>,
     /// address of proposer of this block.
+    #[bincode(with_serde)]
     pub proposer_address: Address,
 }
 
