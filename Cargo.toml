@@ -10,12 +10,12 @@ categories = ["cryptography", "algorithms"]
 
 [dependencies]
 # Malachite dependencies
-malachitebft-app-channel = { version = "0.0.1", package = "informalsystems-malachitebft-app-channel", git = "https://github.com/informalsystems/malachite" }
-malachitebft-proto = { version = "0.0.1", package = "informalsystems-malachitebft-proto", git = "https://github.com/informalsystems/malachite" }
+malachitebft-app-channel = { version = "0.1.0", package = "informalsystems-malachitebft-app-channel", git = "https://github.com/informalsystems/malachite" }
+malachitebft-proto = { version = "0.1.0", package = "informalsystems-malachitebft-proto", git = "https://github.com/informalsystems/malachite" }
 
 # Malachite test dependencies
-malachitebft-test = { version = "0.0.1", package = "informalsystems-malachitebft-test", git = "https://github.com/informalsystems/malachite" }
-malachitebft-test-cli = { version = "0.0.1", package = "informalsystems-malachitebft-test-cli", git = "https://github.com/informalsystems/malachite" }
+malachitebft-test = { version = "0.1.0", package = "informalsystems-malachitebft-test", git = "https://github.com/informalsystems/malachite" }
+malachitebft-test-cli = { version = "0.1.0", package = "informalsystems-malachitebft-test-cli", git = "https://github.com/informalsystems/malachite" }
 
 frieda = { git = "https://github.com/keep-starknet-strange/frieda", rev = "54fc496" } # FRIEDA dependencies
 
