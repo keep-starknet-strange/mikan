@@ -22,7 +22,6 @@ use malachitebft_test::{Height, TestContext, Value, ValueId};
 mod keys;
 use keys::{HeightKey, UndecidedValueKey};
 
-use crate::block::blockproto;
 use crate::metrics::DbMetrics;
 
 #[derive(Clone, Debug)]
