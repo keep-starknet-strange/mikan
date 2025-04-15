@@ -13,7 +13,6 @@ use crate::vote::*;
 #[derive(Copy, Clone, Debug, Default)]
 pub struct TestContext;
 
-
 impl TestContext {
     pub fn new() -> Self {
         Self

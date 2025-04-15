@@ -3,7 +3,6 @@ use eyre::Ok;
 use malachitebft_test::{Address, PrivateKey};
 use rand::{thread_rng, Rng};
 use rs_merkle::{algorithms::Sha256, Hasher, MerkleTree};
-use serde::{Deserialize, Serialize};
 
 use crate::{blob::Blob, error::BlockError, finality_params::FinalityParams, header::Header};
 
@@ -92,8 +91,27 @@ impl Block {
     }
 }
 
+pub fn mock_make_validator() -> Address {
+    let mut rng = thread_rng();
+    let sk = PrivateKey::generate(&mut rng);
+    println!("{:?}", sk.public_key());
+    Address::from_public_key(&sk.public_key())
+}
+
+pub fn mock_make_blobs() -> Blob {
+    let mut rng = thread_rng();
+
+    let random_blob_data: Vec<u8> = (0..16).map(|_| rng.gen()).collect();
+    let random_app_id: Vec<u8> = (0..16).map(|_| rng.gen()).collect();
+
+    Blob {
+        app_id: random_app_id,
+        data: random_blob_data,
+    }
+}
+
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use super::*;
     use crate::height::Height;
     use crate::{header::HeaderBuilder, vote::Vote};
@@ -153,24 +171,5 @@ mod tests {
 
         // println!("{:?}", block);
         Ok(())
-    }
-}
-
-pub fn mock_make_validator() -> Address {
-    let mut rng = thread_rng();
-    let sk = PrivateKey::generate(&mut rng);
-    println!("{:?}", sk.public_key());
-    Address::from_public_key(&sk.public_key())
-}
-
-pub fn mock_make_blobs() -> Blob {
-    let mut rng = thread_rng();
-
-    let random_blob_data: Vec<u8> = (0..16).map(|_| rng.gen()).collect();
-    let random_app_id: Vec<u8> = (0..16).map(|_| rng.gen()).collect();
-
-    Blob {
-        app_id: random_app_id,
-        data: random_blob_data,
     }
 }

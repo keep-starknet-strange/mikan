@@ -4,13 +4,11 @@ use crate::value::ValueId;
 use bincode::{
     de::Decoder,
     enc::Encoder,
-    error::{AllowedEnumVariants, DecodeError, EncodeError},
-    Decode, Encode,
+    error::{DecodeError, EncodeError},
+    impl_borrow_decode, Decode, Encode,
 };
 use malachitebft_core_types::{NilOrVal, Round, SignedExtension, VoteType};
 use malachitebft_test::Address;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::fmt;
 
 #[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd)]
 pub struct Vote {
@@ -23,141 +21,6 @@ pub struct Vote {
     pub validator_address: Address,
     pub value: NilOrVal<ValueId>,
     pub extension: Option<SignedExtension<TestContext>>,
-}
-
-impl Serialize for Vote {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        use serde::ser::SerializeStruct;
-        let mut state = serializer.serialize_struct("Vote", 9)?;
-        state.serialize_field("validator", &self.validator)?;
-        state.serialize_field("signature", &self.signature)?;
-        state.serialize_field("block", &self.block)?;
-        state.serialize_field("height", &self.height)?;
-        state.serialize_field("round", &self.round.as_u32())?;
-        state.serialize_field("typ", &(self.typ as u8))?;
-        state.serialize_field("validator_address", &self.validator_address)?;
-        match &self.value {
-            NilOrVal::Nil => state.serialize_field("value", &("Nil", ()))?,
-            NilOrVal::Val(v) => state.serialize_field("value", &("Val", v))?,
-        }
-        state.serialize_field("extension", &Option::<()>::None)?;
-        state.end()
-    }
-}
-
-impl<'de> Deserialize<'de> for Vote {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        #[derive(Deserialize)]
-        #[serde(field_identifier, rename_all = "snake_case")]
-        enum Field {
-            Validator,
-            Signature,
-            Block,
-            Height,
-            Round,
-            Typ,
-            ValidatorAddress,
-            Value,
-            Extension,
-        }
-
-        struct VoteVisitor;
-        impl<'de> serde::de::Visitor<'de> for VoteVisitor {
-            type Value = Vote;
-
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                formatter.write_str("struct Vote")
-            }
-
-            fn visit_map<V>(self, mut map: V) -> Result<Vote, V::Error>
-            where
-                V: serde::de::MapAccess<'de>,
-            {
-                let mut validator = None;
-                let mut signature = None;
-                let mut block = None;
-                let mut height = None;
-                let mut round = None;
-                let mut typ = None;
-                let mut validator_address = None;
-                let mut value = None;
-                let mut extension: Option<SignedExtension<TestContext>> = None;
-
-                while let Some(key) = map.next_key()? {
-                    match key {
-                        Field::Validator => validator = Some(map.next_value()?),
-                        Field::Signature => signature = Some(map.next_value()?),
-                        Field::Block => block = Some(map.next_value()?),
-                        Field::Height => height = Some(map.next_value()?),
-                        Field::Round => {
-                            let round_val: u32 = map.next_value()?;
-                            round = Some(Round::new(round_val));
-                        }
-                        Field::Typ => {
-                            let typ_val: u8 = map.next_value()?;
-                            typ = Some(unsafe { std::mem::transmute(typ_val) });
-                        }
-                        Field::ValidatorAddress => validator_address = Some(map.next_value()?),
-                        Field::Value => {
-                            let (variant, val): (String, ValueId) = map.next_value()?;
-                            value = Some(match variant.as_str() {
-                                "Nil" => NilOrVal::Nil,
-                                "Val" => NilOrVal::Val(val),
-                                _ => return Err(serde::de::Error::custom("invalid variant")),
-                            });
-                        }
-                        Field::Extension => {
-                            let _: Option<()> = map.next_value()?;
-                            extension = None;
-                        }
-                    }
-                }
-
-                let validator =
-                    validator.ok_or_else(|| serde::de::Error::missing_field("validator"))?;
-                let signature =
-                    signature.ok_or_else(|| serde::de::Error::missing_field("signature"))?;
-                let block = block.ok_or_else(|| serde::de::Error::missing_field("block"))?;
-                let height = height.ok_or_else(|| serde::de::Error::missing_field("height"))?;
-                let round = round.ok_or_else(|| serde::de::Error::missing_field("round"))?;
-                let typ = typ.ok_or_else(|| serde::de::Error::missing_field("typ"))?;
-                let validator_address = validator_address
-                    .ok_or_else(|| serde::de::Error::missing_field("validator_address"))?;
-                let value = value.ok_or_else(|| serde::de::Error::missing_field("value"))?;
-
-                Ok(Vote {
-                    validator,
-                    signature,
-                    block,
-                    height,
-                    round,
-                    typ,
-                    validator_address,
-                    value,
-                    extension,
-                })
-            }
-        }
-
-        const FIELDS: &[&str] = &[
-            "validator",
-            "signature",
-            "block",
-            "height",
-            "round",
-            "typ",
-            "validator_address",
-            "value",
-            "extension",
-        ];
-        deserializer.deserialize_struct("Vote", FIELDS, VoteVisitor)
-    }
 }
 
 impl Vote {
@@ -282,6 +145,7 @@ impl<Context> Decode<Context> for Vote {
         })
     }
 }
+impl_borrow_decode!(Vote);
 
 #[cfg(test)]
 mod tests {

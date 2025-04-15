@@ -34,8 +34,7 @@ const HISTORY_LENGTH: u64 = 100;
 /// Represents the internal state of the application node
 /// Contains information about current height, round, proposals and blocks
 pub struct State {
-    
-    ctx: TestContext,
+    _ctx: TestContext,
     signing_provider: Ed25519Provider,
     genesis: Genesis,
     address: Address,
@@ -89,7 +88,7 @@ impl State {
         store: Store,
     ) -> Self {
         Self {
-            ctx,
+            _ctx: ctx,
             signing_provider,
             genesis,
             current_height: height,

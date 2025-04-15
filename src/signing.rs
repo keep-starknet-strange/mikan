@@ -21,7 +21,6 @@ pub struct Ed25519Provider {
     private_key: PrivateKey,
 }
 
-
 impl Ed25519Provider {
     pub fn new(private_key: PrivateKey) -> Self {
         Self { private_key }

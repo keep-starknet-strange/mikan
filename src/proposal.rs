@@ -12,7 +12,6 @@ pub struct Proposal {
     pub validator_address: Address,
 }
 
-
 impl Proposal {
     pub fn new(
         height: Height,

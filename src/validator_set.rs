@@ -14,7 +14,6 @@ pub struct Validator {
     pub voting_power: VotingPower,
 }
 
-
 impl Validator {
     pub fn new(public_key: PublicKey, voting_power: VotingPower) -> Self {
         Self {
@@ -56,7 +55,6 @@ impl malachitebft_core_types::Validator<TestContext> for Validator {
 pub struct ValidatorSet {
     pub validators: Arc<Vec<Validator>>,
 }
-
 
 impl ValidatorSet {
     pub fn new(validators: impl IntoIterator<Item = Validator>) -> Self {

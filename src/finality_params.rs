@@ -1,12 +1,11 @@
 use crate::{error::BlockError, vote::Vote};
 use bincode::{Decode, Encode};
 use rs_merkle::{algorithms::Sha256, Hasher, MerkleTree};
-use serde::{Deserialize, Serialize};
-#[derive(Debug, Serialize, Deserialize, Encode, Decode)]
+
+#[derive(Debug, Encode, Decode)]
 pub struct FinalityParams {
     pub height: usize,
     /// list of validators that voted on this block.
-    #[bincode(with_serde)]
     pub votes: Vec<Vote>,
 }
 

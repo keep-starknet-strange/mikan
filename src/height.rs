@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct Height(u64);
 
-
 impl Height {
     pub const fn new(height: u64) -> Self {
         Self(height)

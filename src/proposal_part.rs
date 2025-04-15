@@ -14,7 +14,6 @@ pub struct ProposalData {
     pub bytes: Bytes,
 }
 
-
 impl ProposalData {
     pub fn new(bytes: Bytes) -> Self {
         Self { bytes }
@@ -47,7 +46,6 @@ pub enum ProposalPart {
     Data(ProposalData),
     Fin(ProposalFin),
 }
-
 
 impl ProposalPart {
     pub fn get_type(&self) -> &'static str {
@@ -82,7 +80,6 @@ pub struct ProposalInit {
     pub proposer: Address,
 }
 
-
 impl ProposalInit {
     pub fn new(height: Height, round: Round, proposer: Address) -> Self {
         Self {
@@ -97,7 +94,6 @@ impl ProposalInit {
 pub struct ProposalFin {
     pub signature: Signature,
 }
-
 
 impl ProposalFin {
     pub fn new(signature: Signature) -> Self {

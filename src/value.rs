@@ -5,7 +5,6 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Copy, Serialize, Deserialize)]
 pub struct ValueId(u64);
 
-
 impl ValueId {
     pub const fn new(id: u64) -> Self {
         Self(id)
@@ -34,7 +33,6 @@ pub struct Value {
     pub value: u64,
     pub extensions: Bytes,
 }
-
 
 impl Value {
     /// Creates a new Value by hashing the provided bytes using SipHash
