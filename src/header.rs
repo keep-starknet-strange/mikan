@@ -1,4 +1,8 @@
-use frieda::{api::verify, commit::Commitment, proof::Proof};
+use frieda::{
+    api::verify,
+    commit::{commit, Commitment},
+    proof::Proof,
+};
 use malachitebft_proto::Protobuf;
 use malachitebft_test::{proto, Address};
 use prost::Name;
@@ -128,6 +132,7 @@ impl Protobuf for Header {
     type Proto = blockproto::Header;
 
     fn from_proto(proto: Self::Proto) -> Result<Self, malachitebft_proto::Error> {
+        let commitment = Some(commit(proto.da_commitment(), 4));
         let builder = HeaderBuilder::new();
         let builder = builder
             .block_number(
@@ -143,7 +148,7 @@ impl Protobuf for Header {
                     .expect("u64 does not fit in usize for timestamp"),
             )
             .block_hash(proto.block_hash)
-            .da_commitment(None)
+            .da_commitment(commitment)
             .parent_hash(proto.parent_hash)
             .parent_finality_hash(proto.parent_finality_hash)
             .last_block_number(
