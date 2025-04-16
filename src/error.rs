@@ -7,7 +7,7 @@ pub enum BlockError {
     #[error("Parent Hash Mismatch")]
     ParentFinalityHashValidationFail,
     #[error("Invalid Block Number {0}")]
-    InvalidBlockNumber(usize),
+    InvalidBlockNumber(u64),
     #[error("Expected :{0:?}. Got: {1:?}")]
     FinalityHashMismatch([u8; 32], [u8; 32]),
     #[error("Expected :{0:?}. Got: {1:?}")]

@@ -1,6 +1,6 @@
 use crate::malachite_types::address::Address;
 use bincode::{Decode, Encode};
-use frieda::{api::verify, commit::Commitment, proof::Proof};
+use frieda::{api::verify, proof::Proof};
 use serde::{Deserialize, Serialize};
 use sha3::{Digest, Sha3_256};
 
@@ -9,12 +9,12 @@ use crate::{block::mock_make_validator, error::BlockError};
 #[allow(clippy::too_many_arguments, dead_code)]
 #[derive(Debug, Serialize, Deserialize, Encode, Decode)]
 pub struct Header {
-    pub block_number: usize,
-    pub timestamp: usize,
+    pub block_number: u64,
+    pub timestamp: u64,
     /// Hash of current block
     pub block_hash: [u8; 32],
     /// DA commitment for this block.
-    pub da_commitment: Option<Commitment>,
+    pub da_commitment: Option<[[u8; 32]; 4]>,
     /// block of parent block.
     pub parent_hash: [u8; 32],
     /// Merkle root of the data in the current block.
@@ -42,11 +42,11 @@ impl Header {
     #[allow(clippy::too_many_arguments)]
     /// Creates a new block header and computes its hash.
     pub fn new(
-        block_number: usize,
-        timestamp: usize,
+        block_number: u64,
+        timestamp: u64,
         data_hash: [u8; 32],
         proposer_address: Address,
-        da_commitment: Option<Commitment>,
+        da_commitment: Option<[[u8; 32]; 4]>,
         parent_hash: [u8; 32],
     ) -> Self {
         let mut header = Header {
@@ -90,12 +90,12 @@ impl Header {
 
 #[derive(Debug, Default)]
 pub struct HeaderBuilder {
-    pub block_number: Option<usize>,
-    pub timestamp: Option<usize>,
+    pub block_number: Option<u64>,
+    pub timestamp: Option<u64>,
     /// Hash of current block
     pub block_hash: Option<[u8; 32]>,
     /// DA commitment for this block.
-    pub da_commitment: Option<Option<Commitment>>,
+    pub da_commitment: Option<[[u8; 32]; 4]>,
     /// block of parent block.
     pub parent_hash: Option<[u8; 32]>,
     /// Merkle root of the data in the current block.
@@ -110,12 +110,12 @@ impl HeaderBuilder {
         Self::default()
     }
 
-    pub fn block_number(mut self, block: usize) -> Self {
+    pub fn block_number(mut self, block: u64) -> Self {
         self.block_number = Some(block);
         self
     }
 
-    pub fn timestamp(mut self, timestamp: usize) -> Self {
+    pub fn timestamp(mut self, timestamp: u64) -> Self {
         self.timestamp = Some(timestamp);
         self
     }
@@ -124,7 +124,7 @@ impl HeaderBuilder {
         self.block_hash = Some(block_hash);
         self
     }
-    pub fn da_commitment(mut self, da_commitment: Option<Commitment>) -> Self {
+    pub fn da_commitment(mut self, da_commitment: [[u8; 32]; 4]) -> Self {
         self.da_commitment = Some(da_commitment);
         self
     }
@@ -146,10 +146,10 @@ impl HeaderBuilder {
         Header::new(
             self.block_number.unwrap(),
             self.timestamp.unwrap(),
-            self.data_hash.clone().unwrap_or_default(),
+            self.data_hash.unwrap_or_default(),
             self.proposer_address.unwrap(),
-            self.da_commitment.unwrap(),
-            self.parent_hash.clone().unwrap(),
+            self.da_commitment,
+            self.parent_hash.unwrap(),
         )
     }
 }

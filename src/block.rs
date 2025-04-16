@@ -1,6 +1,6 @@
 use bincode::{Decode, Encode};
 use eyre::Ok;
-use rand::{thread_rng, Rng};
+use rand::{thread_rng, RngCore};
 use rs_merkle::{algorithms::Sha256, Hasher, MerkleTree};
 
 use crate::malachite_types::{address::Address, signing::PrivateKey};
@@ -61,17 +61,9 @@ impl Block {
 
 pub fn mock_make_validator() -> Address {
     let mut rng = thread_rng();
-    let sk = PrivateKey::generate(&mut rng);
+    let mut bytes = [0u8; 32];
+    rng.fill_bytes(&mut bytes);
+    let sk = PrivateKey::from(bytes);
     println!("{:?}", sk.public_key());
     Address::from_public_key(&sk.public_key())
-}
-
-pub fn mock_make_blobs() -> Blob {
-    let mut rng = thread_rng();
-
-    let random_blob_data: Vec<u8> = (0..16).map(|_| rng.gen()).collect();
-
-    Blob {
-        data: random_blob_data,
-    }
 }
