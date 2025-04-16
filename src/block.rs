@@ -11,12 +11,12 @@ pub struct Block {
     /// Block Header.
     pub header: Header,
     /// list of blobs in this block.
-    pub blobs: Vec<Blob>,
+    pub blobs: [Blob; 4],
 }
 
 impl Block {
     /// Create a new block
-    pub fn new(header: Header, blobs: Vec<Blob>) -> Self {
+    pub fn new(header: Header, blobs: [Blob; 4]) -> Self {
         Block { header, blobs }
     }
 
@@ -32,21 +32,12 @@ impl Block {
 
     /// populate the empty fields in `Header`
     pub fn populate(&mut self) -> eyre::Result<()> {
-        // Set the `parent_finality_hash` if not present
-        if self.header.parent_finality_hash.is_empty() {
-            self.header.parent_finality_hash = vec![self.header.block_number as u8; 32];
-        }
-
         // Set the `data_hash` if not present
         let blob_tree_root = self.blob_tree_root()?;
         if self.header.data_hash.is_empty() {
             self.header.data_hash = blob_tree_root;
         } else if self.header.data_hash != blob_tree_root {
-            return Err(BlockError::DataHashMismatch(
-                blob_tree_root,
-                self.header.data_hash.clone(),
-            )
-            .into());
+            return Err(BlockError::DataHashMismatch(blob_tree_root, self.header.data_hash).into());
         }
 
         println!("Header population success!");
@@ -55,7 +46,7 @@ impl Block {
     }
 
     /// Merklize the raw blob data
-    pub fn blob_tree_root(&self) -> eyre::Result<Vec<u8>> {
+    pub fn blob_tree_root(&self) -> eyre::Result<[u8; 32]> {
         let leaves: Vec<[u8; 32]> = self
             .blobs
             .iter()
@@ -64,10 +55,7 @@ impl Block {
 
         let merkle_tree = MerkleTree::<Sha256>::from_leaves(&leaves);
 
-        Ok(merkle_tree
-            .root()
-            .map(Vec::from)
-            .ok_or(BlockError::MerkleTreeError)?)
+        merkle_tree.root().ok_or(BlockError::MerkleTreeError.into())
     }
 }
 
@@ -82,10 +70,8 @@ pub fn mock_make_blobs() -> Blob {
     let mut rng = thread_rng();
 
     let random_blob_data: Vec<u8> = (0..16).map(|_| rng.gen()).collect();
-    let random_app_id: Vec<u8> = (0..16).map(|_| rng.gen()).collect();
 
     Blob {
-        app_id: random_app_id,
         data: random_blob_data,
     }
 }
