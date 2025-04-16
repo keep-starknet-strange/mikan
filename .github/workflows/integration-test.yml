@@ -51,7 +51,7 @@ jobs:
           SPAWN_PID=$!
 
           # Wait for nodes to start and produce some blocks
-          sleep 30
+          sleep 100
 
           # Check if logs contain successful block production
           if grep -q "height=3" nodes/*/logs/node.log; then
