@@ -6,11 +6,15 @@ use std::mem::size_of;
 
 use bincode::config::standard;
 use bytes::Bytes;
+use chrono::Utc;
 use color_eyre::eyre;
+use frieda::api::commit;
 use sha3::Digest;
 use tracing::{debug, error, info};
 
+use crate::blob::Blob;
 use crate::block::Block;
+use crate::header::Header;
 use crate::malachite_types::codec::proto::ProtobufCodec;
 use crate::malachite_types::signing::Ed25519Provider;
 use crate::malachite_types::value::Value;
@@ -140,8 +144,30 @@ impl State {
     }
 
     pub fn make_block(&mut self) -> eyre::Result<Bytes> {
-        let block = Block::default();
-        let block_data = bincode::encode_to_vec(&block, standard())?;
+        let mut block = Block::default();
+        block
+            .blobs
+            .iter_mut()
+            .for_each(|blob| *blob = Blob::random());
+        let commitments = block
+            .blobs
+            .iter()
+            .map(|blob| commit(&blob.data, 4))
+            .collect::<Vec<[u8; 32]>>()
+            .try_into()
+            .unwrap();
+        let header = Header::new(
+            self.current_height.as_u64(),
+            Utc::now().timestamp() as u64,
+            block.blob_tree_root()?,
+            self.address,
+            Some(commitments),
+            [self.current_height.as_u64() as u8 - 1; 32],
+        );
+        block.header = header;
+        block.header.block_hash = block.header.compute_block_hash();
+
+        let block_data = bincode::encode_to_vec(&block.header, standard())?;
         Ok(Bytes::from(block_data))
     }
 

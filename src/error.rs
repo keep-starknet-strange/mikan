@@ -7,11 +7,11 @@ pub enum BlockError {
     #[error("Parent Hash Mismatch")]
     ParentFinalityHashValidationFail,
     #[error("Invalid Block Number {0}")]
-    InvalidBlockNumber(usize),
+    InvalidBlockNumber(u64),
     #[error("Expected :{0:?}. Got: {1:?}")]
-    FinalityHashMismatch(Vec<u8>, Vec<u8>),
+    FinalityHashMismatch([u8; 32], [u8; 32]),
     #[error("Expected :{0:?}. Got: {1:?}")]
-    DataHashMismatch(Vec<u8>, Vec<u8>),
+    DataHashMismatch([u8; 32], [u8; 32]),
     #[error("Merkle Tree Root calculation error")]
     MerkleTreeError,
     #[error("{0}")]
