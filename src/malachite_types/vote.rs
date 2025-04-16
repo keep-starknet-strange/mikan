@@ -1,52 +1,61 @@
-use crate::context::TestContext;
-use crate::height::Height;
-use crate::value::ValueId;
-use bincode::{
-    de::Decoder,
-    enc::Encoder,
-    error::{DecodeError, EncodeError},
-    impl_borrow_decode, Decode, Encode,
-};
+use super::proto;
+use super::{address::Address, context::TestContext, height::Height, value::ValueId};
+use bincode::de::Decoder;
+use bincode::enc::Encoder;
+use bincode::error::{DecodeError, EncodeError};
+use bincode::{impl_borrow_decode, Decode, Encode};
+use bytes::Bytes;
 use malachitebft_core_types::{NilOrVal, Round, SignedExtension, VoteType};
-use malachitebft_test::Address;
+use malachitebft_proto::{Error as ProtoError, Protobuf};
 
-#[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd)]
+pub use malachitebft_core_types::Extension;
+
+/// A vote for a value in a round
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Vote {
-    pub validator: Address,
-    pub signature: Vec<u8>,
-    pub block: usize,
+    pub typ: VoteType,
     pub height: Height,
     pub round: Round,
-    pub typ: VoteType,
-    pub validator_address: Address,
     pub value: NilOrVal<ValueId>,
+    pub validator_address: Address,
     pub extension: Option<SignedExtension<TestContext>>,
 }
 
 impl Vote {
-    #[allow(clippy::too_many_arguments)]
-    pub fn new(
-        validator: Address,
-        sig: Vec<u8>,
-        block: usize,
+    pub fn new_prevote(
         height: Height,
         round: Round,
-        typ: VoteType,
-        validator_address: Address,
         value: NilOrVal<ValueId>,
-        extension: Option<SignedExtension<TestContext>>,
+        validator_address: Address,
     ) -> Self {
         Self {
-            validator,
-            signature: sig,
-            block,
+            typ: VoteType::Prevote,
             height,
             round,
-            typ,
-            validator_address,
             value,
-            extension,
+            validator_address,
+            extension: None,
         }
+    }
+
+    pub fn new_precommit(
+        height: Height,
+        round: Round,
+        value: NilOrVal<ValueId>,
+        address: Address,
+    ) -> Self {
+        Self {
+            typ: VoteType::Precommit,
+            height,
+            round,
+            value,
+            validator_address: address,
+            extension: None,
+        }
+    }
+
+    pub fn to_bytes(&self) -> Bytes {
+        Protobuf::to_bytes(self).unwrap()
     }
 }
 
@@ -91,11 +100,57 @@ impl malachitebft_core_types::Vote<TestContext> for Vote {
     }
 }
 
+impl Protobuf for Vote {
+    type Proto = super::proto::Vote;
+
+    fn from_proto(proto: Self::Proto) -> Result<Self, ProtoError> {
+        Ok(Self {
+            typ: decode_votetype(proto.vote_type()),
+            height: Height::from_proto(proto.height)?,
+            round: Round::new(proto.round),
+            value: match proto.value {
+                Some(value) => NilOrVal::Val(ValueId::from_proto(value)?),
+                None => NilOrVal::Nil,
+            },
+            validator_address: Address::from_proto(
+                proto
+                    .validator_address
+                    .ok_or_else(|| ProtoError::missing_field::<Self::Proto>("validator_address"))?,
+            )?,
+            extension: Default::default(),
+        })
+    }
+
+    fn to_proto(&self) -> Result<Self::Proto, ProtoError> {
+        Ok(Self::Proto {
+            vote_type: encode_votetype(self.typ).into(),
+            height: self.height.to_proto()?,
+            round: self.round.as_u32().expect("round should not be nil"),
+            value: match &self.value {
+                NilOrVal::Nil => None,
+                NilOrVal::Val(v) => Some(v.to_proto()?),
+            },
+            validator_address: Some(self.validator_address.to_proto()?),
+        })
+    }
+}
+
+fn encode_votetype(vote_type: VoteType) -> proto::VoteType {
+    match vote_type {
+        VoteType::Prevote => proto::VoteType::Prevote,
+        VoteType::Precommit => proto::VoteType::Precommit,
+    }
+}
+
+fn decode_votetype(vote_type: proto::VoteType) -> VoteType {
+    match vote_type {
+        proto::VoteType::Prevote => VoteType::Prevote,
+        proto::VoteType::Precommit => VoteType::Precommit,
+    }
+}
+
 impl Encode for Vote {
     fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
-        self.validator.into_inner().encode(encoder)?;
-        self.signature.encode(encoder)?;
-        self.block.encode(encoder)?;
         self.height.as_u64().encode(encoder)?;
         self.round.as_u32().encode(encoder)?;
 
@@ -114,10 +169,6 @@ impl Encode for Vote {
 
 impl<Context> Decode<Context> for Vote {
     fn decode<D: Decoder<Context = Context>>(decoder: &mut D) -> Result<Self, DecodeError> {
-        let validator = Address::new(<[u8; 20]>::decode(decoder)?);
-
-        let signature = Vec::<u8>::decode(decoder)?;
-        let block = usize::decode(decoder)?;
         let height = Height::new(u64::decode(decoder)?);
         let round = match Option::<u32>::decode(decoder)? {
             Some(val) => Round::new(val),
@@ -133,9 +184,6 @@ impl<Context> Decode<Context> for Vote {
         };
 
         Ok(Vote {
-            validator,
-            signature,
-            block,
             height,
             round,
             typ,
@@ -150,19 +198,13 @@ impl_borrow_decode!(Vote);
 #[cfg(test)]
 mod tests {
     use super::*;
-    use malachitebft_core_types::VoteType;
 
     fn create_test_vote() -> Vote {
-        Vote::new(
-            Address::new([1u8; 20]),
-            vec![2u8; 64],
-            1,
+        Vote::new_prevote(
             Height::new(100),
             Round::new(2),
-            VoteType::Prevote,
+            NilOrVal::Val(ValueId::new(3)),
             Address::new([3u8; 20]),
-            NilOrVal::Nil,
-            None,
         )
     }
 

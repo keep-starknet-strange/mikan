@@ -1,14 +1,15 @@
+use super::address::Address;
 use bytes::Bytes;
 use malachitebft_core_types::{Context, NilOrVal, Round, ValidatorSet as _};
-use malachitebft_test::Address;
 use malachitebft_test::Ed25519;
 
-use crate::height::*;
-use crate::proposal::*;
-use crate::proposal_part::*;
-use crate::validator::*;
-use crate::value::*;
-use crate::vote::*;
+use super::height::Height;
+use super::proposal::Proposal;
+use super::proposal_part::ProposalPart;
+use super::validator_set::Validator;
+use super::validator_set::ValidatorSet;
+use super::value::Value;
+use super::vote::Vote;
 
 #[derive(Copy, Clone, Debug, Default)]
 pub struct TestContext;
@@ -54,32 +55,32 @@ impl Context for TestContext {
 
     fn new_proposal(
         &self,
-        _height: Self::Height,
-        _round: Round,
-        _value: Self::Value,
-        _pol_round: Round,
-        _address: Self::Address,
+        height: Self::Height,
+        round: Round,
+        value: Self::Value,
+        pol_round: Round,
+        address: Self::Address,
     ) -> Self::Proposal {
-        todo!()
+        Proposal::new(height, round, value, pol_round, address)
     }
 
     fn new_prevote(
         &self,
-        _height: Self::Height,
-        _round: Round,
-        _value_id: NilOrVal<malachitebft_core_types::ValueId<Self>>,
-        _address: Self::Address,
+        height: Self::Height,
+        round: Round,
+        value_id: NilOrVal<malachitebft_core_types::ValueId<Self>>,
+        address: Self::Address,
     ) -> Self::Vote {
-        todo!()
+        Vote::new_prevote(height, round, value_id, address)
     }
 
     fn new_precommit(
         &self,
-        _height: Self::Height,
-        _round: Round,
-        _value_id: NilOrVal<malachitebft_core_types::ValueId<Self>>,
-        _address: Self::Address,
+        height: Self::Height,
+        round: Round,
+        value_id: NilOrVal<malachitebft_core_types::ValueId<Self>>,
+        address: Self::Address,
     ) -> Self::Vote {
-        todo!()
+        Vote::new_precommit(height, round, value_id, address)
     }
 }

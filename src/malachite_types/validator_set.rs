@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
 use malachitebft_core_types::VotingPower;
-use malachitebft_test::Address;
 use serde::{Deserialize, Serialize};
 
-use crate::{context::TestContext, signing::PublicKey};
+use super::signing::PublicKey;
+use super::{address::Address, context::TestContext};
 
 /// A validator is a public key and voting power
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -99,5 +99,23 @@ impl ValidatorSet {
     }
     pub fn get_keys(&self) -> Vec<PublicKey> {
         self.validators.iter().map(|v| v.public_key).collect()
+    }
+}
+
+impl malachitebft_core_types::ValidatorSet<TestContext> for ValidatorSet {
+    fn count(&self) -> usize {
+        self.validators.len()
+    }
+
+    fn total_voting_power(&self) -> VotingPower {
+        self.total_voting_power()
+    }
+
+    fn get_by_address(&self, address: &Address) -> Option<&Validator> {
+        self.get_by_address(address)
+    }
+
+    fn get_by_index(&self, index: usize) -> Option<&Validator> {
+        self.validators.get(index)
     }
 }

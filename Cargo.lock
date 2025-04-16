@@ -2095,7 +2095,7 @@ dependencies = [
 [[package]]
 name = "informalsystems-malachitebft-app"
 version = "0.1.0"
-source = "git+https://github.com/informalsystems/malachite#f2e33d528c23350268fa650506fcfc7b25413a6b"
+source = "git+https://github.com/informalsystems/malachite?rev=fd6b2452fffc5903d0fed36bb4ed984ae7e9085b#fd6b2452fffc5903d0fed36bb4ed984ae7e9085b"
 dependencies = [
  "async-trait",
  "derive-where",
@@ -2121,7 +2121,7 @@ dependencies = [
 [[package]]
 name = "informalsystems-malachitebft-app-channel"
 version = "0.1.0"
-source = "git+https://github.com/informalsystems/malachite#f2e33d528c23350268fa650506fcfc7b25413a6b"
+source = "git+https://github.com/informalsystems/malachite?rev=fd6b2452fffc5903d0fed36bb4ed984ae7e9085b#fd6b2452fffc5903d0fed36bb4ed984ae7e9085b"
 dependencies = [
  "bytes",
  "derive-where",
@@ -2137,7 +2137,7 @@ dependencies = [
 [[package]]
 name = "informalsystems-malachitebft-codec"
 version = "0.1.0"
-source = "git+https://github.com/informalsystems/malachite#f2e33d528c23350268fa650506fcfc7b25413a6b"
+source = "git+https://github.com/informalsystems/malachite?rev=fd6b2452fffc5903d0fed36bb4ed984ae7e9085b#fd6b2452fffc5903d0fed36bb4ed984ae7e9085b"
 dependencies = [
  "bytes",
 ]
@@ -2145,7 +2145,7 @@ dependencies = [
 [[package]]
 name = "informalsystems-malachitebft-config"
 version = "0.1.0"
-source = "git+https://github.com/informalsystems/malachite#f2e33d528c23350268fa650506fcfc7b25413a6b"
+source = "git+https://github.com/informalsystems/malachite?rev=fd6b2452fffc5903d0fed36bb4ed984ae7e9085b#fd6b2452fffc5903d0fed36bb4ed984ae7e9085b"
 dependencies = [
  "bytesize",
  "config 0.14.1",
@@ -2158,7 +2158,7 @@ dependencies = [
 [[package]]
 name = "informalsystems-malachitebft-core-consensus"
 version = "0.1.0"
-source = "git+https://github.com/informalsystems/malachite#f2e33d528c23350268fa650506fcfc7b25413a6b"
+source = "git+https://github.com/informalsystems/malachite?rev=fd6b2452fffc5903d0fed36bb4ed984ae7e9085b#fd6b2452fffc5903d0fed36bb4ed984ae7e9085b"
 dependencies = [
  "async-recursion",
  "derive-where",
@@ -2175,7 +2175,7 @@ dependencies = [
 [[package]]
 name = "informalsystems-malachitebft-core-driver"
 version = "0.1.0"
-source = "git+https://github.com/informalsystems/malachite#f2e33d528c23350268fa650506fcfc7b25413a6b"
+source = "git+https://github.com/informalsystems/malachite?rev=fd6b2452fffc5903d0fed36bb4ed984ae7e9085b#fd6b2452fffc5903d0fed36bb4ed984ae7e9085b"
 dependencies = [
  "derive-where",
  "informalsystems-malachitebft-core-state-machine",
@@ -2187,7 +2187,7 @@ dependencies = [
 [[package]]
 name = "informalsystems-malachitebft-core-state-machine"
 version = "0.1.0"
-source = "git+https://github.com/informalsystems/malachite#f2e33d528c23350268fa650506fcfc7b25413a6b"
+source = "git+https://github.com/informalsystems/malachite?rev=fd6b2452fffc5903d0fed36bb4ed984ae7e9085b#fd6b2452fffc5903d0fed36bb4ed984ae7e9085b"
 dependencies = [
  "derive-where",
  "displaydoc",
@@ -2197,7 +2197,7 @@ dependencies = [
 [[package]]
 name = "informalsystems-malachitebft-core-types"
 version = "0.1.0"
-source = "git+https://github.com/informalsystems/malachite#f2e33d528c23350268fa650506fcfc7b25413a6b"
+source = "git+https://github.com/informalsystems/malachite?rev=fd6b2452fffc5903d0fed36bb4ed984ae7e9085b#fd6b2452fffc5903d0fed36bb4ed984ae7e9085b"
 dependencies = [
  "bytes",
  "derive-where",
@@ -2207,7 +2207,7 @@ dependencies = [
 [[package]]
 name = "informalsystems-malachitebft-core-votekeeper"
 version = "0.1.0"
-source = "git+https://github.com/informalsystems/malachite#f2e33d528c23350268fa650506fcfc7b25413a6b"
+source = "git+https://github.com/informalsystems/malachite?rev=fd6b2452fffc5903d0fed36bb4ed984ae7e9085b#fd6b2452fffc5903d0fed36bb4ed984ae7e9085b"
 dependencies = [
  "derive-where",
  "informalsystems-malachitebft-core-types",
@@ -2217,7 +2217,7 @@ dependencies = [
 [[package]]
 name = "informalsystems-malachitebft-discovery"
 version = "0.1.0"
-source = "git+https://github.com/informalsystems/malachite#f2e33d528c23350268fa650506fcfc7b25413a6b"
+source = "git+https://github.com/informalsystems/malachite?rev=fd6b2452fffc5903d0fed36bb4ed984ae7e9085b#fd6b2452fffc5903d0fed36bb4ed984ae7e9085b"
 dependencies = [
  "either",
  "informalsystems-malachitebft-metrics",
@@ -2231,7 +2231,7 @@ dependencies = [
 [[package]]
 name = "informalsystems-malachitebft-engine"
 version = "0.1.0"
-source = "git+https://github.com/informalsystems/malachite#f2e33d528c23350268fa650506fcfc7b25413a6b"
+source = "git+https://github.com/informalsystems/malachite?rev=fd6b2452fffc5903d0fed36bb4ed984ae7e9085b#fd6b2452fffc5903d0fed36bb4ed984ae7e9085b"
 dependencies = [
  "async-recursion",
  "async-trait",
@@ -2257,7 +2257,7 @@ dependencies = [
 [[package]]
 name = "informalsystems-malachitebft-metrics"
 version = "0.1.0"
-source = "git+https://github.com/informalsystems/malachite#f2e33d528c23350268fa650506fcfc7b25413a6b"
+source = "git+https://github.com/informalsystems/malachite?rev=fd6b2452fffc5903d0fed36bb4ed984ae7e9085b#fd6b2452fffc5903d0fed36bb4ed984ae7e9085b"
 dependencies = [
  "informalsystems-malachitebft-core-state-machine",
  "prometheus-client",
@@ -2266,7 +2266,7 @@ dependencies = [
 [[package]]
 name = "informalsystems-malachitebft-network"
 version = "0.1.0"
-source = "git+https://github.com/informalsystems/malachite#f2e33d528c23350268fa650506fcfc7b25413a6b"
+source = "git+https://github.com/informalsystems/malachite?rev=fd6b2452fffc5903d0fed36bb4ed984ae7e9085b#fd6b2452fffc5903d0fed36bb4ed984ae7e9085b"
 dependencies = [
  "bytes",
  "either",
@@ -2287,7 +2287,7 @@ dependencies = [
 [[package]]
 name = "informalsystems-malachitebft-peer"
 version = "0.1.0"
-source = "git+https://github.com/informalsystems/malachite#f2e33d528c23350268fa650506fcfc7b25413a6b"
+source = "git+https://github.com/informalsystems/malachite?rev=fd6b2452fffc5903d0fed36bb4ed984ae7e9085b#fd6b2452fffc5903d0fed36bb4ed984ae7e9085b"
 dependencies = [
  "bs58",
  "multihash",
@@ -2297,7 +2297,7 @@ dependencies = [
 [[package]]
 name = "informalsystems-malachitebft-proto"
 version = "0.1.0"
-source = "git+https://github.com/informalsystems/malachite#f2e33d528c23350268fa650506fcfc7b25413a6b"
+source = "git+https://github.com/informalsystems/malachite?rev=fd6b2452fffc5903d0fed36bb4ed984ae7e9085b#fd6b2452fffc5903d0fed36bb4ed984ae7e9085b"
 dependencies = [
  "prost",
  "prost-types",
@@ -2307,7 +2307,7 @@ dependencies = [
 [[package]]
 name = "informalsystems-malachitebft-signing-ed25519"
 version = "0.1.0"
-source = "git+https://github.com/informalsystems/malachite#f2e33d528c23350268fa650506fcfc7b25413a6b"
+source = "git+https://github.com/informalsystems/malachite?rev=fd6b2452fffc5903d0fed36bb4ed984ae7e9085b#fd6b2452fffc5903d0fed36bb4ed984ae7e9085b"
 dependencies = [
  "base64",
  "ed25519-consensus",
@@ -2320,7 +2320,7 @@ dependencies = [
 [[package]]
 name = "informalsystems-malachitebft-sync"
 version = "0.1.0"
-source = "git+https://github.com/informalsystems/malachite#f2e33d528c23350268fa650506fcfc7b25413a6b"
+source = "git+https://github.com/informalsystems/malachite?rev=fd6b2452fffc5903d0fed36bb4ed984ae7e9085b#fd6b2452fffc5903d0fed36bb4ed984ae7e9085b"
 dependencies = [
  "async-trait",
  "bytes",
@@ -2341,7 +2341,7 @@ dependencies = [
 [[package]]
 name = "informalsystems-malachitebft-test"
 version = "0.1.0"
-source = "git+https://github.com/informalsystems/malachite#f2e33d528c23350268fa650506fcfc7b25413a6b"
+source = "git+https://github.com/informalsystems/malachite?rev=fd6b2452fffc5903d0fed36bb4ed984ae7e9085b#fd6b2452fffc5903d0fed36bb4ed984ae7e9085b"
 dependencies = [
  "async-trait",
  "base64",
@@ -2372,7 +2372,7 @@ dependencies = [
 [[package]]
 name = "informalsystems-malachitebft-test-cli"
 version = "0.1.0"
-source = "git+https://github.com/informalsystems/malachite#f2e33d528c23350268fa650506fcfc7b25413a6b"
+source = "git+https://github.com/informalsystems/malachite?rev=fd6b2452fffc5903d0fed36bb4ed984ae7e9085b#fd6b2452fffc5903d0fed36bb4ed984ae7e9085b"
 dependencies = [
  "axum",
  "bytesize",
@@ -2398,7 +2398,7 @@ dependencies = [
 [[package]]
 name = "informalsystems-malachitebft-wal"
 version = "0.1.0"
-source = "git+https://github.com/informalsystems/malachite#f2e33d528c23350268fa650506fcfc7b25413a6b"
+source = "git+https://github.com/informalsystems/malachite?rev=fd6b2452fffc5903d0fed36bb4ed984ae7e9085b#fd6b2452fffc5903d0fed36bb4ed984ae7e9085b"
 dependencies = [
  "advisory-lock",
  "bytes",
@@ -3037,14 +3037,20 @@ dependencies = [
  "derive-where",
  "eyre",
  "frieda",
+ "hex",
+ "informalsystems-malachitebft-app",
  "informalsystems-malachitebft-app-channel",
+ "informalsystems-malachitebft-codec",
+ "informalsystems-malachitebft-core-consensus",
  "informalsystems-malachitebft-core-types",
  "informalsystems-malachitebft-proto",
  "informalsystems-malachitebft-signing-ed25519",
+ "informalsystems-malachitebft-sync",
  "informalsystems-malachitebft-test",
  "informalsystems-malachitebft-test-cli",
  "itertools 0.14.0",
  "prost",
+ "prost-build",
  "rand 0.8.5",
  "rand_chacha 0.3.1",
  "rand_core 0.6.4",

@@ -1,41 +1,31 @@
+use color_eyre::eyre::{self, eyre};
 use std::time::Duration;
-
-use eyre::eyre;
-use tokio::time::sleep;
 use tracing::{error, info};
 
+use crate::malachite_types::codec::proto::ProtobufCodec;
+use crate::malachite_types::context::TestContext;
+use crate::state::{decode_value, State};
 use malachitebft_app_channel::app::streaming::StreamContent;
 use malachitebft_app_channel::app::types::codec::Codec;
-use malachitebft_app_channel::app::types::core::{Height as _, Round, Validity};
+use malachitebft_app_channel::app::types::core::{Round, Validity};
 use malachitebft_app_channel::app::types::sync::RawDecidedValue;
-use malachitebft_app_channel::app::types::{LocallyProposedValue, ProposedValue};
+use malachitebft_app_channel::app::types::ProposedValue;
 use malachitebft_app_channel::{AppMsg, Channels, ConsensusMsg, NetworkMsg};
-use malachitebft_test::codec::proto::ProtobufCodec;
-use malachitebft_test::{Height, TestContext};
-
-use crate::state::{decode_value, State};
 
 pub async fn run(state: &mut State, channels: &mut Channels<TestContext>) -> eyre::Result<()> {
     while let Some(msg) = channels.consensus.recv().await {
         match msg {
             // The first message to handle is the `ConsensusReady` message, signaling to the app
             // that Malachite is ready to start consensus
-            AppMsg::ConsensusReady { reply, .. } => {
-                let start_height = state
-                    .store
-                    .max_decided_value_height()
-                    .await
-                    .map(|height| height.increment())
-                    .unwrap_or_else(|| Height::INITIAL);
+            AppMsg::ConsensusReady { reply } => {
+                info!("Consensus is ready");
 
-                info!(%start_height, "Consensus is ready");
-
-                sleep(Duration::from_millis(200)).await;
+                tokio::time::sleep(Duration::from_millis(500)).await;
 
                 // We can simply respond by telling the engine to start consensus
                 // at the current height, which is initially 1
                 if reply
-                    .send((start_height, state.get_validator_set().clone()))
+                    .send((state.current_height, state.get_validator_set().clone()))
                     .is_err()
                 {
                     error!("Failed to send ConsensusReady reply");
@@ -84,33 +74,22 @@ pub async fn run(state: &mut State, channels: &mut Channels<TestContext>) -> eyr
 
                 info!(%height, %round, "Consensus is requesting a value to propose");
 
-                // Here it is important that, if we have previously built a value for this height and round,
-                // we send back the very same value.
-                let proposal = match state.get_previously_built_value(height, round).await? {
-                    Some(proposal) => {
-                        info!(value = %proposal.value.id(), "Re-using previously built value");
-                        proposal
-                    }
-                    None => {
-                        // If we have not previously built a value for that very same height and round,
-                        // we need to create a new value to propose and send it back to consensus.
-                        info!("Building a new value to propose");
-                        state.propose_value(height, round).await?
-                    }
-                };
+                // We need to create a new value to propose and send it back to consensus.
+                // Get block data
+                let block_bytes = state.make_block()?;
+
+                let proposal = state
+                    .propose_value(height, round, block_bytes.clone())
+                    .await?;
 
                 // Send it to consensus
                 if reply.send(proposal.clone()).is_err() {
                     error!("Failed to send GetValue reply");
                 }
 
-                // The POL round is always nil when we propose a newly built value.
-                // See L15/L18 of the Tendermint algorithm.
-                let pol_round = Round::Nil;
-
                 // Now what's left to do is to break down the value to propose into parts,
                 // and send those parts over the network to our peers, for them to re-assemble the full value.
-                for stream_message in state.stream_proposal(proposal, pol_round) {
+                for stream_message in state.stream_proposal(proposal, block_bytes) {
                     info!(%height, %round, "Streaming proposal part: {stream_message:?}");
 
                     channels
@@ -120,43 +99,21 @@ pub async fn run(state: &mut State, channels: &mut Channels<TestContext>) -> eyr
                 }
             }
 
-            AppMsg::ExtendVote {
-                height: _,
-                round: _,
-                value_id: _,
-                reply,
-            } => {
-                // TODO
-                if reply.send(None).is_err() {
-                    error!("Failed to send ExtendVote reply");
-                }
-            }
-
-            AppMsg::VerifyVoteExtension {
-                height: _,
-                round: _,
-                value_id: _,
-                extension: _,
-                reply,
-            } => {
-                // TODO
-                if reply.send(Ok(())).is_err() {
-                    error!("Failed to send VerifyVoteExtension reply");
-                }
-            }
-
             // On the receiving end of these proposal parts (ie. when we are not the proposer),
             // we need to process these parts and re-assemble the full value.
             // To this end, we store each part that we receive and assemble the full value once we
             // have all its constituent parts. Then we send that value back to consensus for it to
             // consider and vote for or against it (ie. vote `nil`), depending on its validity.
             AppMsg::ReceivedProposalPart { from, part, reply } => {
-                let part_type = match &part.content {
-                    StreamContent::Data(part) => part.get_type(),
-                    StreamContent::Fin => "end of stream",
+                let (part_type, part_size) = match &part.content {
+                    StreamContent::Data(part) => (part.get_type(), part.size_bytes()),
+                    StreamContent::Fin => ("end of stream", 0),
                 };
 
-                info!(%from, %part.sequence, part.type = %part_type, "Received proposal part");
+                info!(
+                    %from, %part.sequence, part.type = %part_type, part.size = %part_size,
+                    "Received proposal part"
+                );
 
                 let proposed_value = state.received_proposal_part(from, part).await?;
 
@@ -183,19 +140,24 @@ pub async fn run(state: &mut State, channels: &mut Channels<TestContext>) -> eyr
             // that was decided on as well as the set of commits for that value,
             // ie. the precommits together with their (aggregated) signatures.
             AppMsg::Decided {
-                certificate,
-                extensions,
-                reply,
+                certificate, reply, ..
             } => {
+                let height = certificate.height;
+                let round = certificate.round;
+                let value_id = certificate.value_id;
+
                 info!(
-                    height = %certificate.height,
-                    round = %certificate.round,
-                    value = %certificate.value_id,
+                    height = %height, round = %round, value = %value_id,
                     "Consensus has decided on value"
                 );
 
                 // When that happens, we store the decided value in our store
-                state.commit(certificate, extensions).await?;
+                info!(height = %height, round = %round, value = %value_id, "Committing decided value");
+                state.commit(certificate).await?;
+                info!(height = %height, round = %round, value = %value_id, "Committed decided value");
+
+                // Pause briefly before starting next height, just to make following the logs easier
+                // tokio::time::sleep(Duration::from_millis(500)).await;
 
                 // And then we instruct consensus to start the next height
                 if reply
@@ -215,6 +177,8 @@ pub async fn run(state: &mut State, channels: &mut Channels<TestContext>) -> eyr
             // for the heights in between the one we are currently at (included) and the one
             // that they are at. When the engine receives such a value, it will forward to the application
             // to decode it from its wire format and send back the decoded value to consensus.
+            //
+            // TODO: store the received value somewhere here
             AppMsg::ProcessSyncedValue {
                 height,
                 round,
@@ -225,21 +189,19 @@ pub async fn run(state: &mut State, channels: &mut Channels<TestContext>) -> eyr
                 info!(%height, %round, "Processing synced value");
 
                 let value = decode_value(value_bytes);
-                let proposed_value = ProposedValue {
-                    height,
-                    round,
-                    valid_round: Round::Nil,
-                    proposer,
-                    value,
-                    validity: Validity::Valid,
-                };
 
-                state
-                    .store
-                    .store_undecided_proposal(proposed_value.clone())
-                    .await?;
-
-                if reply.send(proposed_value).is_err() {
+                // We send to consensus to see if it has been decided on
+                if reply
+                    .send(ProposedValue {
+                        height,
+                        round,
+                        valid_round: Round::Nil,
+                        proposer,
+                        value,
+                        validity: Validity::Valid,
+                    })
+                    .is_err()
+                {
                     error!("Failed to send ProcessSyncedValue reply");
                 }
             }
@@ -250,10 +212,7 @@ pub async fn run(state: &mut State, channels: &mut Channels<TestContext>) -> eyr
             // that was decided at some lower height. In that case, we fetch it from our store
             // and send it to consensus.
             AppMsg::GetDecidedValue { height, reply } => {
-                info!(%height, "Received sync request for decided value");
-
                 let decided_value = state.get_decided_value(height).await;
-                info!(%height, "Found decided value: {decided_value:?}");
 
                 let raw_decided_value = decided_value.map(|decided_value| RawDecidedValue {
                     certificate: decided_value.certificate,
@@ -275,37 +234,19 @@ pub async fn run(state: &mut State, channels: &mut Channels<TestContext>) -> eyr
                 }
             }
 
-            AppMsg::RestreamProposal {
-                height,
-                round,
-                valid_round,
-                address: _,
-                value_id: _,
-            } => {
-                //  Look for a proposal at valid_round (should be already stored)
-                info!(%height, %valid_round, "Restreaming existing propos*al...");
+            AppMsg::RestreamProposal { .. } => {
+                error!("RestreamProposal not implemented");
+            }
 
-                let proposal = state
-                    .store
-                    .get_undecided_proposal(height, valid_round)
-                    .await?;
+            AppMsg::ExtendVote { reply, .. } => {
+                if reply.send(None).is_err() {
+                    error!("Failed to send ExtendVote reply");
+                }
+            }
 
-                if let Some(proposal) = proposal {
-                    let locally_proposed_value = LocallyProposedValue {
-                        height,
-                        round,
-                        value: proposal.value,
-                    };
-
-                    for stream_message in state.stream_proposal(locally_proposed_value, valid_round)
-                    {
-                        info!(%height, %valid_round, "Publishing proposal part: {stream_message:?}");
-
-                        channels
-                            .network
-                            .send(NetworkMsg::PublishProposalPart(stream_message))
-                            .await?;
-                    }
+            AppMsg::VerifyVoteExtension { reply, .. } => {
+                if reply.send(Ok(())).is_err() {
+                    error!("Failed to send VerifyVoteExtension reply");
                 }
             }
 

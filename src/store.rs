@@ -1,23 +1,25 @@
 use std::mem::size_of;
 use std::ops::RangeBounds;
 use std::path::Path;
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Instant;
 
 use bytes::Bytes;
 use prost::Message;
 use redb::ReadableTable;
+use thiserror::Error;
+use tracing::error;
 
+use crate::malachite_types::codec::proto as codec;
+use crate::malachite_types::codec::proto::ProtobufCodec;
+use crate::malachite_types::proto;
+use crate::malachite_types::{context::TestContext, height::Height, value::Value};
 use malachitebft_app_channel::app::types::codec::Codec;
 use malachitebft_app_channel::app::types::core::{CommitCertificate, Round};
 use malachitebft_app_channel::app::types::ProposedValue;
 use malachitebft_proto::{Error as ProtoError, Protobuf};
-use malachitebft_test::codec::proto as codec;
-use malachitebft_test::codec::proto::ProtobufCodec;
-use malachitebft_test::proto;
-use malachitebft_test::{Height, TestContext, Value, ValueId};
 
-use crate::error::StoreError;
 use crate::metrics::DbMetrics;
 use crate::tables::keys::{HeightKey, UndecidedValueKey};
 
@@ -29,12 +31,36 @@ pub struct DecidedValue {
 
 fn decode_certificate(bytes: &[u8]) -> Result<CommitCertificate<TestContext>, ProtoError> {
     let proto = proto::CommitCertificate::decode(bytes)?;
-    codec::decode_commit_certificate(proto)
+    codec::decode_certificate(proto)
 }
 
 fn encode_certificate(certificate: &CommitCertificate<TestContext>) -> Result<Vec<u8>, ProtoError> {
-    let proto = codec::encode_commit_certificate(certificate)?;
+    let proto = codec::encode_certificate(certificate)?;
     Ok(proto.encode_to_vec())
+}
+
+#[derive(Debug, Error)]
+pub enum StoreError {
+    #[error("Database error: {0}")]
+    Database(#[from] redb::DatabaseError),
+
+    #[error("Storage error: {0}")]
+    Storage(#[from] redb::StorageError),
+
+    #[error("Table error: {0}")]
+    Table(#[from] redb::TableError),
+
+    #[error("Commit error: {0}")]
+    Commit(#[from] redb::CommitError),
+
+    #[error("Transaction error: {0}")]
+    Transaction(#[from] redb::TransactionError),
+
+    #[error("Failed to encode/decode Protobuf: {0}")]
+    Protobuf(#[from] ProtoError),
+
+    #[error("Failed to join on task: {0}")]
+    TaskJoin(#[from] tokio::task::JoinError),
 }
 
 const CERTIFICATES_TABLE: redb::TableDefinition<HeightKey, Vec<u8>> =
@@ -45,6 +71,12 @@ const DECIDED_VALUES_TABLE: redb::TableDefinition<HeightKey, Vec<u8>> =
 
 const UNDECIDED_PROPOSALS_TABLE: redb::TableDefinition<UndecidedValueKey, Vec<u8>> =
     redb::TableDefinition::new("undecided_values");
+
+const DECIDED_BLOCK_DATA_TABLE: redb::TableDefinition<HeightKey, Vec<u8>> =
+    redb::TableDefinition::new("decided_block_data");
+
+const UNDECIDED_BLOCK_DATA_TABLE: redb::TableDefinition<UndecidedValueKey, Vec<u8>> =
+    redb::TableDefinition::new("undecided_block_data");
 
 struct Db {
     db: redb::Database,
@@ -170,7 +202,10 @@ impl Db {
         let tx = self.db.begin_write()?;
         {
             let mut table = tx.open_table(UNDECIDED_PROPOSALS_TABLE)?;
-            table.insert(key, value.to_vec())?;
+            // Only insert if no value exists at this key
+            if table.get(&key)?.is_none() {
+                table.insert(key, value.to_vec())?;
+            }
         }
         tx.commit()?;
 
@@ -210,6 +245,21 @@ impl Db {
             .collect::<Vec<_>>())
     }
 
+    fn block_data_range<Table>(
+        &self,
+        table: &Table,
+        range: impl RangeBounds<(Height, Round)>,
+    ) -> Result<Vec<(Height, Round)>, StoreError>
+    where
+        Table: redb::ReadableTable<UndecidedValueKey, Vec<u8>>,
+    {
+        Ok(table
+            .range(range)?
+            .flatten()
+            .map(|(key, _)| key.value())
+            .collect::<Vec<_>>())
+    }
+
     fn prune(&self, retain_height: Height) -> Result<Vec<Height>, StoreError> {
         let start = Instant::now();
 
@@ -222,14 +272,24 @@ impl Db {
                 undecided.remove(key)?;
             }
 
+            let mut undecided_block_data = tx.open_table(UNDECIDED_BLOCK_DATA_TABLE)?;
+            let keys =
+                self.block_data_range(&undecided_block_data, ..(retain_height, Round::Nil))?;
+            for key in &keys {
+                undecided_block_data.remove(key)?;
+            }
+
             let mut decided = tx.open_table(DECIDED_VALUES_TABLE)?;
             let mut certificates = tx.open_table(CERTIFICATES_TABLE)?;
+            let mut decided_block_data = tx.open_table(DECIDED_BLOCK_DATA_TABLE)?;
 
             let keys = self.height_range(&decided, ..retain_height)?;
             for key in &keys {
                 decided.remove(key)?;
                 certificates.remove(key)?;
+                decided_block_data.remove(key)?;
             }
+
             keys
         };
 
@@ -254,12 +314,12 @@ impl Db {
         Some(key.value())
     }
 
-    fn max_decided_value_height(&self) -> Option<Height> {
-        let tx = self.db.begin_read().unwrap();
-        let table = tx.open_table(DECIDED_VALUES_TABLE).unwrap();
-        let (key, _) = table.last().ok()??;
-        Some(key.value())
-    }
+    // fn max_decided_value_height(&self) -> Option<Height> {
+    //     let tx = self.db.begin_read().unwrap();
+    //     let table = tx.open_table(DECIDED_VALUES_TABLE).unwrap();
+    //     let (key, _) = table.last().ok()??;
+    //     Some(key.value())
+    // }
 
     fn create_tables(&self) -> Result<(), StoreError> {
         let tx = self.db.begin_write()?;
@@ -268,83 +328,113 @@ impl Db {
         let _ = tx.open_table(DECIDED_VALUES_TABLE)?;
         let _ = tx.open_table(CERTIFICATES_TABLE)?;
         let _ = tx.open_table(UNDECIDED_PROPOSALS_TABLE)?;
+        let _ = tx.open_table(DECIDED_BLOCK_DATA_TABLE)?;
+        let _ = tx.open_table(UNDECIDED_BLOCK_DATA_TABLE)?;
 
         tx.commit()?;
 
         Ok(())
     }
 
-    fn remove_undecided_proposals_by_value_id(&self, value_id: ValueId) -> Result<(), StoreError> {
+    fn get_block_data(&self, height: Height, round: Round) -> Result<Option<Bytes>, StoreError> {
         let start = Instant::now();
-        let tx = self.db.begin_write()?;
 
-        {
-            let mut table = tx.open_table(UNDECIDED_PROPOSALS_TABLE)?;
-            // Iterate through all entries
-            let keys_to_remove: Vec<_> = table
-                .iter()?
-                .flatten()
-                .filter_map(|(key, value)| {
-                    // Decode the proposal
-                    let bytes = value.value();
-                    let proposal: ProposedValue<TestContext> = ProtobufCodec
-                        .decode(Bytes::from(bytes))
-                        .map_err(StoreError::Protobuf)
-                        .ok()?;
+        let tx = self.db.begin_read()?;
 
-                    // Check if the value matches
-                    if proposal.value.id() == value_id {
-                        return Some(key.value());
-                    }
-                    None
-                })
-                .collect();
-
-            // Remove all matching entries
-            for key in keys_to_remove {
-                table.remove(&key)?;
-            }
+        // Try undecided block data first
+        let undecided_table = tx.open_table(UNDECIDED_BLOCK_DATA_TABLE)?;
+        if let Some(data) = undecided_table.get(&(height, round))? {
+            let bytes = data.value();
+            let read_bytes = bytes.len() as u64;
+            self.metrics.observe_read_time(start.elapsed());
+            self.metrics.add_read_bytes(read_bytes);
+            self.metrics
+                .add_key_read_bytes((size_of::<Height>() + size_of::<Round>()) as u64);
+            return Ok(Some(Bytes::copy_from_slice(&bytes)));
         }
 
+        // Then try decided block data
+        let decided_table = tx.open_table(DECIDED_BLOCK_DATA_TABLE)?;
+        if let Some(data) = decided_table.get(&height)? {
+            let bytes = data.value();
+            let read_bytes = bytes.len() as u64;
+            self.metrics.observe_read_time(start.elapsed());
+            self.metrics.add_read_bytes(read_bytes);
+            self.metrics.add_key_read_bytes(size_of::<Height>() as u64);
+            return Ok(Some(Bytes::copy_from_slice(&bytes)));
+        }
+
+        self.metrics.observe_read_time(start.elapsed());
+        Ok(None)
+    }
+
+    fn insert_undecided_block_data(
+        &self,
+        height: Height,
+        round: Round,
+        data: Bytes,
+    ) -> Result<(), StoreError> {
+        let start = Instant::now();
+        let write_bytes = data.len() as u64;
+
+        let tx = self.db.begin_write()?;
+        {
+            let mut table = tx.open_table(UNDECIDED_BLOCK_DATA_TABLE)?;
+            let key = (height, round);
+            // Only insert if no value exists at this key
+            if table.get(&key)?.is_none() {
+                table.insert(key, data.to_vec())?;
+            }
+        }
         tx.commit()?;
-        self.metrics.observe_delete_time(start.elapsed());
+
+        self.metrics.observe_write_time(start.elapsed());
+        self.metrics.add_write_bytes(write_bytes);
 
         Ok(())
     }
 
-    fn get_undecided_proposal_by_value_id(
-        &self,
-        value_id: ValueId,
-    ) -> Result<Option<ProposedValue<TestContext>>, StoreError> {
-        let tx = self.db.begin_read()?;
-        let table = tx.open_table(UNDECIDED_PROPOSALS_TABLE)?;
+    fn insert_decided_block_data(&self, height: Height, data: Bytes) -> Result<(), StoreError> {
+        let start = Instant::now();
+        let write_bytes = data.len() as u64;
 
-        for result in table.iter()? {
-            let (_, value) = result?;
-            let proposal: ProposedValue<TestContext> = ProtobufCodec
-                .decode(Bytes::from(value.value()))
-                .map_err(StoreError::Protobuf)?;
-
-            if proposal.value.id() == value_id {
-                return Ok(Some(proposal));
+        let tx = self.db.begin_write()?;
+        {
+            let mut table = tx.open_table(DECIDED_BLOCK_DATA_TABLE)?;
+            // Only insert if no value exists at this key
+            if table.get(&height)?.is_none() {
+                table.insert(height, data.to_vec())?;
             }
         }
+        tx.commit()?;
 
-        Ok(None)
+        self.metrics.observe_write_time(start.elapsed());
+        self.metrics.add_write_bytes(write_bytes);
+
+        Ok(())
     }
 }
 
 #[derive(Clone)]
 pub struct Store {
     db: Arc<Db>,
+    path: PathBuf,
 }
 
 impl Store {
     pub fn open(path: impl AsRef<Path>, metrics: DbMetrics) -> Result<Self, StoreError> {
-        let db = Db::new(path, metrics)?;
+        let path_buf = path.as_ref().to_path_buf();
+        let db = Db::new(&path_buf, metrics)?;
         db.create_tables()?;
 
-        Ok(Self { db: Arc::new(db) })
+        Ok(Self {
+            db: Arc::new(db),
+            path: path_buf,
+        })
+    }
+
+    pub fn get_path(&self) -> &PathBuf {
+        &self.path
     }
 
     pub async fn min_decided_value_height(&self) -> Option<Height> {
@@ -355,13 +445,13 @@ impl Store {
             .flatten()
     }
 
-    pub async fn max_decided_value_height(&self) -> Option<Height> {
-        let db = Arc::clone(&self.db);
-        tokio::task::spawn_blocking(move || db.max_decided_value_height())
-            .await
-            .ok()
-            .flatten()
-    }
+    // pub async fn max_decided_value_height(&self) -> Option<Height> {
+    //     let db = Arc::clone(&self.db);
+    //     tokio::task::spawn_blocking(move || db.max_decided_value_height())
+    //         .await
+    //         .ok()
+    //         .flatten()
+    // }
 
     pub async fn get_decided_value(
         &self,
@@ -407,21 +497,32 @@ impl Store {
         let db = Arc::clone(&self.db);
         tokio::task::spawn_blocking(move || db.prune(retain_height)).await?
     }
-
-    pub async fn remove_undecided_proposals_by_value_id(
+    pub async fn get_block_data(
         &self,
-        value_id: ValueId,
+        height: Height,
+        round: Round,
+    ) -> Result<Option<Bytes>, StoreError> {
+        let db = Arc::clone(&self.db);
+        tokio::task::spawn_blocking(move || db.get_block_data(height, round)).await?
+    }
+
+    pub async fn store_undecided_block_data(
+        &self,
+        height: Height,
+        round: Round,
+        data: Bytes,
     ) -> Result<(), StoreError> {
         let db = Arc::clone(&self.db);
-        tokio::task::spawn_blocking(move || db.remove_undecided_proposals_by_value_id(value_id))
+        tokio::task::spawn_blocking(move || db.insert_undecided_block_data(height, round, data))
             .await?
     }
 
-    pub async fn get_undecided_proposal_by_value_id(
+    pub async fn store_decided_block_data(
         &self,
-        value_id: ValueId,
-    ) -> Result<Option<ProposedValue<TestContext>>, StoreError> {
+        height: Height,
+        data: Bytes,
+    ) -> Result<(), StoreError> {
         let db = Arc::clone(&self.db);
-        tokio::task::spawn_blocking(move || db.get_undecided_proposal_by_value_id(value_id)).await?
+        tokio::task::spawn_blocking(move || db.insert_decided_block_data(height, data)).await?
     }
 }

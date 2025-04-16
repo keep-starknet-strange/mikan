@@ -1,6 +1,6 @@
+use crate::malachite_types::address::Address;
 use bincode::{Decode, Encode};
 use frieda::{api::verify, commit::Commitment, proof::Proof};
-use malachitebft_test::Address;
 use serde::{Deserialize, Serialize};
 use sha3::{Digest, Sha3_256};
 

@@ -10,14 +10,18 @@ categories = ["cryptography", "algorithms"]
 
 [dependencies]
 # Malachite dependencies
-malachitebft-app-channel = { version = "0.1.0", package = "informalsystems-malachitebft-app-channel", git = "https://github.com/informalsystems/malachite" }
-malachitebft-proto = { version = "0.1.0", package = "informalsystems-malachitebft-proto", git = "https://github.com/informalsystems/malachite" }
-malachitebft-core-types = { version = "0.1.0", package = "informalsystems-malachitebft-core-types", git = "https://github.com/informalsystems/malachite" }
-malachitebft-signing-ed25519 = { version = "0.1.0", package = "informalsystems-malachitebft-signing-ed25519", git = "https://github.com/informalsystems/malachite" }
+malachitebft-app-channel = { version = "0.1.0", package = "informalsystems-malachitebft-app-channel", git = "https://github.com/informalsystems/malachite", rev = "fd6b2452fffc5903d0fed36bb4ed984ae7e9085b" }
+malachitebft-app = { version = "0.1.0", package = "informalsystems-malachitebft-app", git = "https://github.com/informalsystems/malachite", rev = "fd6b2452fffc5903d0fed36bb4ed984ae7e9085b" }
+malachitebft-codec = { version = "0.1.0", package = "informalsystems-malachitebft-codec", git = "https://github.com/informalsystems/malachite", rev = "fd6b2452fffc5903d0fed36bb4ed984ae7e9085b" }
+malachitebft-proto = { version = "0.1.0", package = "informalsystems-malachitebft-proto", git = "https://github.com/informalsystems/malachite", rev = "fd6b2452fffc5903d0fed36bb4ed984ae7e9085b" }
+malachitebft-core-types = { version = "0.1.0", package = "informalsystems-malachitebft-core-types", git = "https://github.com/informalsystems/malachite", rev = "fd6b2452fffc5903d0fed36bb4ed984ae7e9085b" }
+malachitebft-core-consensus = { version = "0.1.0", package = "informalsystems-malachitebft-core-consensus", git = "https://github.com/informalsystems/malachite", rev = "fd6b2452fffc5903d0fed36bb4ed984ae7e9085b" }
+malachitebft-signing-ed25519 = { version = "0.1.0", package = "informalsystems-malachitebft-signing-ed25519", git = "https://github.com/informalsystems/malachite", rev = "fd6b2452fffc5903d0fed36bb4ed984ae7e9085b" }
+malachitebft-sync = { version = "0.1.0", package = "informalsystems-malachitebft-sync", git = "https://github.com/informalsystems/malachite", rev = "fd6b2452fffc5903d0fed36bb4ed984ae7e9085b" }
 
 # Malachite test dependencies
-malachitebft-test = { version = "0.1.0", package = "informalsystems-malachitebft-test", git = "https://github.com/informalsystems/malachite" }
-malachitebft-test-cli = { version = "0.1.0", package = "informalsystems-malachitebft-test-cli", git = "https://github.com/informalsystems/malachite" }
+malachitebft-test = { version = "0.1.0", package = "informalsystems-malachitebft-test", git = "https://github.com/informalsystems/malachite", rev = "fd6b2452fffc5903d0fed36bb4ed984ae7e9085b" }
+malachitebft-test-cli = { version = "0.1.0", package = "informalsystems-malachitebft-test-cli", git = "https://github.com/informalsystems/malachite", rev = "fd6b2452fffc5903d0fed36bb4ed984ae7e9085b" }
 
 frieda = { git = "https://github.com/keep-starknet-strange/frieda", rev = "54fc496" } # FRIEDA dependencies
 
@@ -43,7 +47,10 @@ toml = "0.8.19"
 tracing = "0.1.41"
 rs_merkle = "1.5.0"
 bincode = { version = "2.0.1", features = ["alloc", "serde"] }
+hex = { version = "0.4.3", features = ["serde"] }
 
+[build-dependencies]
+prost-build = "0.13"
 
 [workspace.lints.clippy]
 too_many_arguments = "allow"

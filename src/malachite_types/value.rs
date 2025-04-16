@@ -1,6 +1,9 @@
 use bytes::Bytes;
 use core::fmt;
+use malachitebft_proto::{Error as ProtoError, Protobuf};
 use serde::{Deserialize, Serialize};
+
+use super::proto;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Copy, Serialize, Deserialize)]
 pub struct ValueId(u64);
@@ -24,6 +27,18 @@ impl From<u64> for ValueId {
 impl fmt::Display for ValueId {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:x}", self.0)
+    }
+}
+
+impl Protobuf for ValueId {
+    type Proto = proto::ValueId;
+
+    fn from_proto(proto: Self::Proto) -> Result<Self, ProtoError> {
+        Ok(ValueId::new(proto.value))
+    }
+
+    fn to_proto(&self) -> Result<Self::Proto, ProtoError> {
+        Ok(proto::ValueId { value: self.0 })
     }
 }
 
@@ -63,5 +78,23 @@ impl malachitebft_core_types::Value for Value {
 
     fn id(&self) -> ValueId {
         self.id()
+    }
+}
+
+impl Protobuf for Value {
+    type Proto = proto::Value;
+
+    fn from_proto(proto: Self::Proto) -> Result<Self, ProtoError> {
+        let value = proto.value;
+        let extensions = proto.extensions;
+
+        Ok(Value { value, extensions })
+    }
+
+    fn to_proto(&self) -> Result<Self::Proto, ProtoError> {
+        Ok(proto::Value {
+            value: self.value,
+            extensions: self.extensions.clone(),
+        })
     }
 }
