@@ -149,7 +149,6 @@ impl DbMetrics {
         metrics
     }
 
-    #[allow(dead_code)]
     pub fn set_db_size(&self, size: usize) {
         self.db_size.set(size as i64);
     }

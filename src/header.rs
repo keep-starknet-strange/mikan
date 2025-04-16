@@ -1,6 +1,6 @@
+use crate::malachite_types::address::Address;
 use bincode::{Decode, Encode};
 use frieda::{api::verify, commit::Commitment, proof::Proof};
-use malachitebft_test::Address;
 use serde::{Deserialize, Serialize};
 use sha3::{Digest, Sha3_256};
 
@@ -28,8 +28,22 @@ pub struct Header {
     #[bincode(with_serde)]
     pub proposer_address: Address,
 }
+impl Default for Header {
+    fn default() -> Self {
+        Self {
+            block_number: 0,
+            timestamp: 0,
+            block_hash: Vec::new(),
+            da_commitment: None,
+            parent_hash: Vec::new(),
+            parent_finality_hash: Vec::new(),
+            last_block_number: 0,
+            data_hash: Vec::new(),
+            proposer_address: mock_make_validator(),
+        }
+    }
+}
 
-#[allow(dead_code)]
 impl Header {
     #[allow(clippy::too_many_arguments)]
     /// Creates a new block header and computes its hash.
@@ -56,20 +70,6 @@ impl Header {
         };
         header.block_hash = header.compute_block_hash();
         header
-    }
-
-    pub fn default() -> Self {
-        Self {
-            block_number: 0,
-            timestamp: 0,
-            block_hash: Vec::new(),
-            da_commitment: None,
-            parent_hash: Vec::new(),
-            parent_finality_hash: Vec::new(),
-            last_block_number: 0,
-            data_hash: Vec::new(),
-            proposer_address: mock_make_validator(),
-        }
     }
 
     pub fn basic_validation(&self) -> Result<(), BlockError> {
@@ -129,7 +129,7 @@ pub struct HeaderBuilder {
     /// address of proposer of this block.
     pub proposer_address: Option<Address>,
 }
-#[allow(dead_code)]
+
 impl HeaderBuilder {
     pub fn new() -> Self {
         Self::default()

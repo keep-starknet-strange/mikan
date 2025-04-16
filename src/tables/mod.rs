@@ -3,7 +3,6 @@ use crate::error::StoreError;
 pub mod block;
 pub mod keys;
 
-#[allow(dead_code)]
 pub trait Table {
     type Key;
     type Value;

@@ -16,13 +16,15 @@ use malachitebft_app_channel::app::node::{
 };
 use malachitebft_app_channel::app::types::core::{Height as _, VotingPower};
 use malachitebft_app_channel::app::types::Keypair;
+use malachitebft_signing_ed25519::{PrivateKey, PublicKey};
 
 // Use the same types used for integration tests.
 // A real application would use its own types and context instead.
-use malachitebft_test::codec::proto::ProtobufCodec;
-use malachitebft_test::{
-    Address, Ed25519Provider, Genesis, Height, PrivateKey, PublicKey, TestContext, Validator,
-    ValidatorSet,
+use crate::malachite_types::codec::proto::ProtobufCodec;
+use crate::malachite_types::signing::Ed25519Provider;
+use crate::malachite_types::{
+    address::Address, context::TestContext, genesis::Genesis, height::Height,
+    validator_set::Validator, validator_set::ValidatorSet,
 };
 use malachitebft_test_cli::metrics;
 
@@ -127,7 +129,7 @@ impl Node for App {
         let codec = ProtobufCodec;
 
         let (mut channels, engine_handle) = malachitebft_app_channel::start_engine(
-            ctx.clone(),
+            ctx,
             codec,
             self.clone(),
             config.clone(),
@@ -150,7 +152,16 @@ impl Node for App {
 
         let store = Store::open(db_dir.join("store.db"), metrics)?;
         let start_height = self.start_height.unwrap_or(Height::INITIAL);
-        let mut state = State::new(ctx, signing_provider, genesis, address, start_height, store);
+        let mut state = State::new(
+            genesis,
+            ctx,
+            signing_provider,
+            address,
+            start_height,
+            store,
+            false,
+        )
+        .await;
 
         let span = tracing::error_span!("node", moniker = %config.moniker);
         let app_handle = tokio::spawn(

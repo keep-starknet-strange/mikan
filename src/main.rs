@@ -1,34 +1,33 @@
 //! Example application using channels
 
+use crate::malachite_types::codec::proto::ProtobufCodec;
 use config::Config;
 use eyre::{eyre, Result};
-use malachitebft_test::codec::proto::ProtobufCodec;
 use malachitebft_test_cli::cmd::dump_wal::DumpWalCmd;
 use malachitebft_test_cli::config::{LogFormat, LogLevel};
 use tracing::info;
 
+use crate::malachite_types::height::Height;
 use malachitebft_app_channel::app::node::Node;
-use malachitebft_test::Height;
 use malachitebft_test_cli::args::{Args, Commands};
 use malachitebft_test_cli::cmd::init::InitCmd;
 use malachitebft_test_cli::cmd::start::StartCmd;
 use malachitebft_test_cli::cmd::testnet::TestnetCmd;
 use malachitebft_test_cli::{logging, runtime};
 
-mod app;
-mod blob;
-mod block;
-mod config;
-mod error;
-mod finality_params;
-mod header;
-mod metrics;
-mod node;
-mod state;
-mod store;
-mod streaming;
-mod tables;
-mod vote;
+pub mod app;
+pub mod blob;
+pub mod block;
+pub mod config;
+pub mod error;
+pub mod header;
+pub mod malachite_types;
+pub mod metrics;
+pub mod node;
+pub mod state;
+pub mod store;
+pub mod streaming;
+pub mod tables;
 
 use node::App;
 
