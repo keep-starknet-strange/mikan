@@ -26,7 +26,6 @@ malachitebft-test-cli = { version = "0.1.0", package = "informalsystems-malachit
 frieda = { git = "https://github.com/keep-starknet-strange/frieda", rev = "54fc496" } # FRIEDA dependencies
 
 # Other dependencies
-derive-where = "1.2.7"
 async-trait = "0.1.85"
 bytes = { version = "1", default-features = false, features = ["serde"] }
 color-eyre = "0.6"
@@ -35,8 +34,6 @@ eyre = "0.6"
 itertools = "0.14"
 prost = "0.13"
 rand = { version = "0.8.5", features = ["std_rng"] }
-rand_core = "0.6.4"
-rand_chacha = "0.3.1"
 redb = "2.4.0"
 serde = "1.0"
 serde_json = "1.0"
