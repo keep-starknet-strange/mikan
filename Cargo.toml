@@ -23,7 +23,7 @@ malachitebft-sync = { version = "0.1.0", package = "informalsystems-malachitebft
 malachitebft-test = { version = "0.1.0", package = "informalsystems-malachitebft-test", git = "https://github.com/informalsystems/malachite", rev = "fd6b2452fffc5903d0fed36bb4ed984ae7e9085b" }
 malachitebft-test-cli = { version = "0.1.0", package = "informalsystems-malachitebft-test-cli", git = "https://github.com/informalsystems/malachite", rev = "fd6b2452fffc5903d0fed36bb4ed984ae7e9085b" }
 
-frieda = { git = "https://github.com/keep-starknet-strange/frieda", rev = "54fc496" } # FRIEDA dependencies
+frieda = { git = "https://github.com/keep-starknet-strange/frieda", branch = "main" } # FRIEDA dependencies
 
 # Other dependencies
 async-trait = "0.1.85"
@@ -46,6 +46,7 @@ rs_merkle = "1.5.0"
 bincode = { version = "2.0.1", features = ["alloc", "serde"] }
 hex = { version = "0.4.3", features = ["serde"] }
 chrono = "0.4.40"
+rayon = "1.10.0"
 
 [build-dependencies]
 prost-build = "0.13"

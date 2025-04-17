@@ -37,11 +37,10 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Build
-        run: cargo build
+        run: cargo build -r
 
       - name: Setup testnet
         run: cargo run -- testnet --nodes 3 --home nodes
-
       - name: Start nodes and validate
         run: |
           # Start the nodes in the background
@@ -51,7 +50,7 @@ jobs:
           SPAWN_PID=$!
 
           # Wait for nodes to start and produce some blocks
-          sleep 100
+          sleep 30
 
           # Check if logs contain successful block production
           if grep -q "height=3" nodes/*/logs/node.log; then
