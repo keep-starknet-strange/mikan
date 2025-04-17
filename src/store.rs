@@ -20,8 +20,10 @@ use malachitebft_test::proto;
 use malachitebft_test::{Height, TestContext, Value, ValueId};
 
 mod keys;
+mod block;
 use keys::{HeightKey, UndecidedValueKey};
 
+use crate::block::Block;
 use crate::metrics::DbMetrics;
 
 #[derive(Clone, Debug)]
@@ -70,6 +72,12 @@ const CERTIFICATES_TABLE: redb::TableDefinition<HeightKey, Vec<u8>> =
 const DECIDED_VALUES_TABLE: redb::TableDefinition<HeightKey, Vec<u8>> =
     redb::TableDefinition::new("decided_values");
 
+const PENDING_BLOCK_PROPOSALS_TABLE: redb::TableDefinition<HeightKey, Block> =
+    redb::TableDefinition::new("pending_block_proposal");
+
+const FINALIZED_BLOCK_TABLE: redb::TableDefinition<HeightKey, Block> =
+    redb::TableDefinition::new("finalized_block_data");
+
 const UNDECIDED_PROPOSALS_TABLE: redb::TableDefinition<UndecidedValueKey, Vec<u8>> =
     redb::TableDefinition::new("undecided_values");
 
@@ -84,6 +92,16 @@ impl Db {
             db: redb::Database::create(path).map_err(StoreError::Database)?,
             metrics,
         })
+    }
+
+    fn get_pending_block_proposal(&self, height: Height) -> Result<Option<Block>, StoreError> {
+        let start = Instant::now();
+        let read_bytes = 0;
+
+        let tx = self.db.begin_read()?;
+
+
+
     }
 
     fn get_decided_value(&self, height: Height) -> Result<Option<DecidedValue>, StoreError> {
