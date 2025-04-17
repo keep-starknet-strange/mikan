@@ -18,6 +18,7 @@ use malachitebft_app_channel::app::types::core::{Height as _, VotingPower};
 use malachitebft_app_channel::app::types::Keypair;
 use malachitebft_signing_ed25519::{PrivateKey, PublicKey};
 
+use crate::block::Block;
 // Use the same types used for integration tests.
 // A real application would use its own types and context instead.
 use crate::malachite_types::codec::proto::ProtobufCodec;
@@ -152,7 +153,7 @@ impl Node for App {
 
         let store = Store::open(db_dir.join("store.db"), metrics)?;
         let start_height = self.start_height.unwrap_or(Height::INITIAL);
-        let state = State::new(
+        let mut state = State::new(
             genesis,
             ctx,
             signing_provider,
@@ -166,7 +167,14 @@ impl Node for App {
         let span = tracing::error_span!("node", moniker = %config.moniker);
         let app_handle = tokio::spawn(
             async move {
-                let mut state = state;
+                state
+                    .store
+                    .store_decided_block_data(
+                        start_height - 1,
+                        Block::genesis().to_bytes().unwrap(),
+                    )
+                    .await
+                    .unwrap();
                 if let Err(e) = crate::app::run(&mut state, &mut channels).await {
                     tracing::error!(%e, "Application error");
                 }

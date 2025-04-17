@@ -5,7 +5,6 @@ use config::Config;
 use eyre::{eyre, Result};
 use malachitebft_test_cli::cmd::dump_wal::DumpWalCmd;
 use malachitebft_test_cli::config::{LogFormat, LogLevel};
-use tokio::runtime::Builder;
 use tracing::info;
 
 use crate::malachite_types::height::Height;
@@ -14,7 +13,7 @@ use malachitebft_test_cli::args::{Args, Commands};
 use malachitebft_test_cli::cmd::init::InitCmd;
 use malachitebft_test_cli::cmd::start::StartCmd;
 use malachitebft_test_cli::cmd::testnet::TestnetCmd;
-use malachitebft_test_cli::logging;
+use malachitebft_test_cli::{logging, runtime};
 
 pub mod app;
 pub mod blob;
@@ -71,13 +70,8 @@ fn start(args: &Args, cmd: &StartCmd) -> Result<()> {
     // This is a drop guard responsible for flushing any remaining logs when the program terminates.
     // It must be assigned to a binding that is not _, as _ will result in the guard being dropped immediately.
     let _guard = logging::init(config.logging.log_level, config.logging.log_format);
-    // println!("config: {:?}", config.runtime);
-    // let rt = runtime::build_runtime(config.runtime)?;
-    let rt = Builder::new_multi_thread()
-        .thread_stack_size(16 * 1024 * 1024)
-        .worker_threads(4)
-        .enable_all()
-        .build()?;
+
+    let rt = runtime::build_runtime(config.runtime)?;
     info!(moniker = %config.moniker, "Starting Malachite");
 
     // Start the node

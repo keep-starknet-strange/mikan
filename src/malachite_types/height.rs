@@ -1,6 +1,7 @@
 use core::fmt;
 use malachitebft_proto::{Error as ProtoError, Protobuf};
 use serde::{Deserialize, Serialize};
+use std::ops::{Add, Sub};
 
 /// A blockchain height
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
@@ -39,6 +40,37 @@ impl fmt::Display for Height {
 impl fmt::Debug for Height {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Height({})", self.0)
+    }
+}
+impl Add for Height {
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self {
+        Self(self.0 + other.0)
+    }
+}
+
+impl Sub for Height {
+    type Output = Self;
+
+    fn sub(self, other: Self) -> Self {
+        Self(self.0 - other.0)
+    }
+}
+
+impl Add<u64> for Height {
+    type Output = Self;
+
+    fn add(self, other: u64) -> Self {
+        Self(self.0 + other)
+    }
+}
+
+impl Sub<u64> for Height {
+    type Output = Self;
+
+    fn sub(self, other: u64) -> Self {
+        Self(self.0 - other)
     }
 }
 
