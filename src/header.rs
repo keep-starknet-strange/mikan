@@ -1,6 +1,5 @@
 use crate::malachite_types::address::Address;
 use bincode::{Decode, Encode};
-use frieda::{api::verify, proof::Proof};
 use serde::{Deserialize, Serialize};
 use sha3::{Digest, Sha3_256};
 
@@ -14,7 +13,7 @@ pub struct Header {
     /// Hash of current block
     pub block_hash: [u8; 32],
     /// DA commitment for this block.
-    pub da_commitment: Option<[[u8; 32]; 4]>,
+    pub da_commitment: [[u8; 32]; 4],
     /// block of parent block.
     pub parent_hash: [u8; 32],
     /// Merkle root of the data in the current block.
@@ -30,7 +29,7 @@ impl Default for Header {
             block_number: 0,
             timestamp: 0,
             block_hash: [0; 32],
-            da_commitment: None,
+            da_commitment: [[0; 32]; 4],
             parent_hash: [0; 32],
             data_hash: [0; 32],
             proposer_address: mock_make_validator(),
@@ -46,7 +45,7 @@ impl Header {
         timestamp: u64,
         data_hash: [u8; 32],
         proposer_address: Address,
-        da_commitment: Option<[[u8; 32]; 4]>,
+        da_commitment: [[u8; 32]; 4],
         parent_hash: [u8; 32],
     ) -> Self {
         let mut header = Header {
@@ -60,6 +59,12 @@ impl Header {
         };
         header.block_hash = header.compute_block_hash();
         header
+    }
+    pub fn parent_hash(&self) -> [u8; 32] {
+        self.parent_hash
+    }
+    pub fn block_hash(&self) -> [u8; 32] {
+        self.block_hash
     }
 
     pub fn basic_validation(&self) -> Result<(), BlockError> {
@@ -80,11 +85,6 @@ impl Header {
         hasher.update(self.proposer_address.into_inner());
 
         hasher.finalize().into()
-    }
-
-    /// Verify the commitment against a proof
-    pub fn verify_data(&self, proof: Proof) -> bool {
-        verify(proof, None)
     }
 }
 
@@ -148,7 +148,7 @@ impl HeaderBuilder {
             self.timestamp.unwrap(),
             self.data_hash.unwrap_or_default(),
             self.proposer_address.unwrap(),
-            self.da_commitment,
+            self.da_commitment.unwrap(),
             self.parent_hash.unwrap(),
         )
     }

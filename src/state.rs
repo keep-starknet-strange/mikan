@@ -1,21 +1,8 @@
 //! Internal state of the application. This is a simplified abstract to keep it simple.
 //! A regular application would have mempool implemented, a proper database and input methods like RPC.
 
-use std::collections::HashSet;
-use std::mem::size_of;
-
-use bincode::config::standard;
-use bytes::Bytes;
-use chrono::Utc;
-use color_eyre::eyre;
-use frieda::api::commit;
-use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
-use sha3::Digest;
-use tracing::{debug, error, info};
-
 use crate::blob::Blob;
 use crate::block::Block;
-use crate::header::Header;
 use crate::malachite_types::codec::proto::ProtobufCodec;
 use crate::malachite_types::signing::Ed25519Provider;
 use crate::malachite_types::value::Value;
@@ -27,15 +14,21 @@ use crate::malachite_types::{
     proposal_part::{ProposalData, ProposalFin, ProposalInit, ProposalPart},
     validator_set::ValidatorSet,
 };
+use crate::store::{DecidedValue, Store};
+use crate::streaming::{PartStreamsMap, ProposalParts};
+use bincode::config::standard;
+use bytes::Bytes;
+use chrono::Utc;
+use color_eyre::eyre;
+use eyre::Result;
 use malachitebft_app_channel::app::streaming::{StreamContent, StreamId, StreamMessage};
 use malachitebft_app_channel::app::types::codec::Codec;
 use malachitebft_app_channel::app::types::core::{CommitCertificate, Round, Validity};
 use malachitebft_app_channel::app::types::{LocallyProposedValue, PeerId, ProposedValue};
-
-use crate::store::{DecidedValue, Store};
-use crate::streaming::{PartStreamsMap, ProposalParts};
-
-use eyre::Result;
+use sha3::Digest;
+use std::collections::HashSet;
+use std::mem::size_of;
+use tracing::{debug, error, info};
 
 /// Size of chunks in which the data is split for streaming
 const CHUNK_SIZE: usize = 128 * 1024; // 128 KiB
@@ -144,29 +137,26 @@ impl State {
         }
     }
 
-    pub fn make_block(&mut self) -> eyre::Result<Bytes> {
-        let mut block = Block::default();
-        block
-            .blobs
-            .iter_mut()
-            .for_each(|blob| *blob = Blob::random());
-        let commitments = block
-            .blobs
-            .par_iter()
-            .map(|blob| commit(&blob.data, 4))
-            .collect::<Vec<[u8; 32]>>()
-            .try_into()
-            .unwrap();
-        let header = Header::new(
+    pub async fn make_block(&mut self) -> eyre::Result<Bytes> {
+        let prev_block = self
+            .store
+            .get_decided_block(self.current_height - 1)
+            .await?;
+        let prev_block = prev_block.unwrap();
+        let (prev_block, _): (Block, usize) =
+            bincode::borrow_decode_from_slice(prev_block.as_ref(), standard())?;
+        let block = Block::new(
             self.current_height.as_u64(),
             Utc::now().timestamp() as u64,
-            block.blob_tree_root()?,
+            prev_block.hash(),
             self.address,
-            Some(commitments),
-            [self.current_height.as_u64() as u8 - 1; 32],
+            [
+                Blob::random(),
+                Blob::random(),
+                Blob::random(),
+                Blob::random(),
+            ],
         );
-        block.header = header;
-        block.header.block_hash = block.header.compute_block_hash();
 
         let block_data = bincode::encode_to_vec(&block, standard())?;
         Ok(Bytes::from(block_data))
@@ -224,15 +214,18 @@ impl State {
 
         // Re-assemble the proposal from its parts
         let (value, data) = assemble_value_from_parts(parts);
-        let (block, _): (Block, usize) =
-            bincode::borrow_decode_from_slice(&data, standard()).unwrap();
-        let valid = block
-            .blobs
-            .par_iter()
-            .zip(block.header.da_commitment.unwrap().par_iter())
-            .all(|(blob, commitment)| commit(&blob.data, 4) == *commitment);
-        if !valid {
-            error!("Invalid da commitment");
+        let (block, _): (Block, usize) = bincode::borrow_decode_from_slice(&data, standard())?;
+        let prev_block = self
+            .store
+            .get_decided_block(self.current_height - 1)
+            .await?;
+        let Some(prev_block) = prev_block else {
+            error!("Previous block not found");
+            return Ok(None);
+        };
+        let (prev_block, _) = bincode::borrow_decode_from_slice(prev_block.as_ref(), standard())?;
+        if !block.is_valid(self.current_height.as_u64(), &prev_block)? {
+            error!("Invalid block");
             return Ok(None);
         }
 

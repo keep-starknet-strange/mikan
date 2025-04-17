@@ -76,7 +76,7 @@ pub async fn run(state: &mut State, channels: &mut Channels<TestContext>) -> eyr
 
                 // We need to create a new value to propose and send it back to consensus.
                 // Get block data
-                let block_bytes = state.make_block()?;
+                let block_bytes = state.make_block().await?;
 
                 let proposal = state
                     .propose_value(height, round, block_bytes.clone())

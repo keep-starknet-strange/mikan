@@ -7,7 +7,7 @@ use super::proto;
 use super::signing::PublicKey;
 use malachitebft_test::Hashable;
 
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, Default)]
 #[serde(transparent)]
 pub struct Address(
     #[serde(
