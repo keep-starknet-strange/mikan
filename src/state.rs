@@ -9,6 +9,7 @@ use bytes::Bytes;
 use chrono::Utc;
 use color_eyre::eyre;
 use frieda::api::commit;
+use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
 use sha3::Digest;
 use tracing::{debug, error, info};
 
@@ -151,7 +152,7 @@ impl State {
             .for_each(|blob| *blob = Blob::random());
         let commitments = block
             .blobs
-            .iter()
+            .par_iter()
             .map(|blob| commit(&blob.data, 4))
             .collect::<Vec<[u8; 32]>>()
             .try_into()
@@ -167,7 +168,7 @@ impl State {
         block.header = header;
         block.header.block_hash = block.header.compute_block_hash();
 
-        let block_data = bincode::encode_to_vec(&block.header, standard())?;
+        let block_data = bincode::encode_to_vec(&block, standard())?;
         Ok(Bytes::from(block_data))
     }
 
@@ -223,6 +224,17 @@ impl State {
 
         // Re-assemble the proposal from its parts
         let (value, data) = assemble_value_from_parts(parts);
+        let (block, _): (Block, usize) =
+            bincode::borrow_decode_from_slice(&data, standard()).unwrap();
+        let valid = block
+            .blobs
+            .par_iter()
+            .zip(block.header.da_commitment.unwrap().par_iter())
+            .all(|(blob, commitment)| commit(&blob.data, 4) == *commitment);
+        if !valid {
+            error!("Invalid da commitment");
+            return Ok(None);
+        }
 
         // Log first 32 bytes of proposal data and total size
         if data.len() >= 32 {

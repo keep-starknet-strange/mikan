@@ -152,7 +152,7 @@ impl Node for App {
 
         let store = Store::open(db_dir.join("store.db"), metrics)?;
         let start_height = self.start_height.unwrap_or(Height::INITIAL);
-        let mut state = State::new(
+        let state = State::new(
             genesis,
             ctx,
             signing_provider,
@@ -166,6 +166,7 @@ impl Node for App {
         let span = tracing::error_span!("node", moniker = %config.moniker);
         let app_handle = tokio::spawn(
             async move {
+                let mut state = state;
                 if let Err(e) = crate::app::run(&mut state, &mut channels).await {
                     tracing::error!(%e, "Application error");
                 }

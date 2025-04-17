@@ -37,7 +37,7 @@ if [[ -z "$APP_BINARY" ]]; then
 fi
 
 echo "Compiling '$APP_BINARY'..."
-cargo build -p $APP_BINARY
+cargo build -r -p $APP_BINARY
 
 # Create nodes and logs directories, run nodes
 for NODE in $(seq 0 $((NODES_COUNT - 1))); do
@@ -56,7 +56,7 @@ for NODE in $(seq 0 $((NODES_COUNT - 1))); do
     mkdir -p "$NODES_HOME/$NODE/traces"
 
     echo "[Node $NODE] Spawning node..."
-    RUST_BACKTRACE=1 cargo run -p $APP_BINARY -q -- start --home "$NODES_HOME/$NODE" > "$NODES_HOME/$NODE/logs/node.log" 2>&1 &
+    RUST_BACKTRACE=full cargo run -r -p $APP_BINARY -q -- start --home "$NODES_HOME/$NODE" > "$NODES_HOME/$NODE/logs/node.log" 2>&1 &
     echo $! > "$NODES_HOME/$NODE/node.pid"
     echo "[Node $NODE] Logs are available at: $NODES_HOME/$NODE/logs/node.log"
 done
