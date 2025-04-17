@@ -2,7 +2,7 @@ use bincode::{Decode, Encode};
 use bytes::Bytes;
 use rand::{thread_rng, RngCore};
 
-pub const BLOB_SIZE: usize = 245760;
+pub const BLOB_SIZE: usize = 245760 * 4;
 #[derive(Debug, Encode, Decode)]
 pub struct Blob {
     /// Data of the blob

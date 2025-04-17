@@ -181,7 +181,6 @@ pub fn mock_make_validator() -> Address {
     let mut bytes = [0u8; 32];
     rng.fill_bytes(&mut bytes);
     let sk = PrivateKey::from(bytes);
-    println!("{:?}", sk.public_key());
     Address::from_public_key(&sk.public_key())
 }
 
@@ -195,7 +194,7 @@ mod tests {
         let block = Block::new(
             1,
             Utc::now().timestamp() as u64,
-            prev_block.blob_tree_root().unwrap(),
+            prev_block.hash(),
             mock_make_validator(),
             [
                 Blob::random(),
