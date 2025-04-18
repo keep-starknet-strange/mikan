@@ -1,7 +1,6 @@
 //! Internal state of the application. This is a simplified abstract to keep it simple.
 //! A regular application would have mempool implemented, a proper database and input methods like RPC.
 
-use crate::blob::Blob;
 use crate::block::Block;
 use crate::malachite_types::codec::proto::ProtobufCodec;
 use crate::malachite_types::signing::Ed25519Provider;
@@ -16,6 +15,7 @@ use crate::malachite_types::{
 };
 use crate::store::{DecidedValue, Store};
 use crate::streaming::{PartStreamsMap, ProposalParts};
+use crate::transactions::pool::TransactionPool;
 use bincode::config::standard;
 use bytes::Bytes;
 use chrono::Utc;
@@ -52,6 +52,8 @@ pub struct State {
     // block_proposer: BlockProposer,
     // block_executor: BlockExecutor,
     // rpc_server: Option<RpcServerHandle>,
+    // TODO: replace this wiith rpc server
+    pub transaction_pool: TransactionPool,
     pub current_height: Height,
     pub current_round: Round,
     pub current_proposer: Option<Address>,
@@ -72,6 +74,7 @@ enum SignatureVerificationError {
 }
 
 impl State {
+    #[allow(clippy::too_many_arguments)]
     /// Creates a new State instance with the given validator address and starting height
     pub async fn new(
         genesis: Genesis,
@@ -80,6 +83,7 @@ impl State {
         address: Address,
         height: Height,
         store: Store,
+        transaction_pool: TransactionPool,
         _enable_rpc: bool,
     ) -> Self {
         // Get the node's home directory from the store path
@@ -88,10 +92,7 @@ impl State {
         let _db_path = node_dir.join("mikan_db");
 
         // Extract node index from the directory name
-        println!(
-            "node_dir: {:?}",
-            node_dir.file_name().and_then(|name| name.to_str())
-        );
+
         let node_index = node_dir
             .file_name()
             .and_then(|name| name.to_str())
@@ -131,6 +132,7 @@ impl State {
             stream_nonce: 0,
             streams_map: PartStreamsMap::new(),
             peers: HashSet::new(),
+            transaction_pool,
             // block_proposer: BlockProposer::new(&blocks_file).unwrap(),
             // block_executor,
             // rpc_server,
@@ -145,17 +147,22 @@ impl State {
         let prev_block = prev_block.unwrap();
         let (prev_block, _): (Block, usize) =
             bincode::borrow_decode_from_slice(prev_block.as_ref(), standard())?;
+
+        let mut tx = self.transaction_pool.get_top_transaction();
+        while !tx.validate() {
+            error!("Invalid transaction, skipping");
+            tx = self.transaction_pool.get_top_transaction();
+        }
+        info!(
+            "Valid transaction, {} adding to block",
+            hex::encode(tx.hash())
+        );
         let block = Block::new(
             self.current_height.as_u64(),
             Utc::now().timestamp() as u64,
             prev_block.hash(),
             self.address,
-            [
-                Blob::random(),
-                Blob::random(),
-                Blob::random(),
-                Blob::random(),
-            ],
+            tx.data().clone(),
         );
 
         let block_data = bincode::encode_to_vec(&block, standard())?;

@@ -27,6 +27,8 @@ use crate::malachite_types::{
     address::Address, context::TestContext, genesis::Genesis, height::Height,
     validator_set::Validator, validator_set::ValidatorSet,
 };
+use crate::transactions::pool::TransactionPool;
+use crate::transactions::Transaction;
 use malachitebft_test_cli::metrics;
 
 use crate::config::{load_config, Config};
@@ -153,6 +155,10 @@ impl Node for App {
 
         let store = Store::open(db_dir.join("store.db"), metrics)?;
         let start_height = self.start_height.unwrap_or(Height::INITIAL);
+        let transaction_pool = TransactionPool::new();
+        for _ in 0..100 {
+            transaction_pool.add_transaction(Transaction::random());
+        }
         let mut state = State::new(
             genesis,
             ctx,
@@ -160,6 +166,7 @@ impl Node for App {
             address,
             start_height,
             store,
+            transaction_pool,
             false,
         )
         .await;

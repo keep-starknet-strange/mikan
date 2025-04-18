@@ -28,6 +28,7 @@ pub mod state;
 pub mod store;
 pub mod streaming;
 pub mod tables;
+pub mod transactions;
 
 use node::App;
 
