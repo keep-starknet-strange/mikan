@@ -95,10 +95,15 @@ impl Db {
     }
 
     fn get_pending_block_proposal(&self, height: Height) -> Result<Option<Block>, StoreError> {
-        let start = Instant::now();
-        let read_bytes = 0;
-
         let tx = self.db.begin_read()?;
+
+        let value = {
+            let table = tx.open_table(PENDING_BLOCK_PROPOSALS_TABLE)?;
+            let pending_block = table.get(&height)?;
+            pending_block.map(|block| block.value())
+        };
+
+        Ok(value)
     }
 
     fn get_decided_value(&self, height: Height) -> Result<Option<DecidedValue>, StoreError> {
