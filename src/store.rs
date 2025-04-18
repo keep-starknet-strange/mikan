@@ -106,6 +106,17 @@ impl Db {
         Ok(value)
     }
 
+    fn insert_pending_block_proposal(&self, height: Height, pending_block: Block) -> Result<(), StoreError> {
+        let tx = self.db.begin_write()?;
+
+        {
+            let mut table = tx.open_table(PENDING_BLOCK_PROPOSALS_TABLE)?;
+            table.insert(height, pending_block)?;
+        }
+
+        Ok(())
+    }
+
     fn get_decided_value(&self, height: Height) -> Result<Option<DecidedValue>, StoreError> {
         let start = Instant::now();
         let mut read_bytes = 0;
