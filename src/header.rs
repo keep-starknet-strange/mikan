@@ -18,7 +18,7 @@ pub struct Header {
     pub parent_hash: [u8; 32],
     /// Merkle root of the data in the current block.
     /// Leaves of this tree will be the raw bytes of each blob
-    pub data_hash: [u8; 32],
+    pub tx_commitment: [u8; 32],
     /// address of proposer of this block.
     #[bincode(with_serde)]
     pub proposer_address: Address,
@@ -31,7 +31,7 @@ impl Default for Header {
             block_hash: [0; 32],
             da_commitment: [[0; 32]; 4],
             parent_hash: [0; 32],
-            data_hash: [0; 32],
+            tx_commitment: [0; 32],
             proposer_address: mock_make_validator(),
         }
     }
@@ -43,7 +43,7 @@ impl Header {
     pub fn new(
         block_number: u64,
         timestamp: u64,
-        data_hash: [u8; 32],
+        tx_commitment: [u8; 32],
         proposer_address: Address,
         da_commitment: [[u8; 32]; 4],
         parent_hash: [u8; 32],
@@ -52,7 +52,7 @@ impl Header {
             block_number,
             timestamp,
             da_commitment,
-            data_hash,
+            tx_commitment,
             proposer_address,
             parent_hash,
             block_hash: [0; 32],
@@ -81,7 +81,7 @@ impl Header {
 
         hasher.update(self.block_number.to_le_bytes());
         hasher.update(self.parent_hash);
-        hasher.update(self.data_hash);
+        hasher.update(self.tx_commitment);
         hasher.update(self.proposer_address.into_inner());
 
         hasher.finalize().into()
@@ -100,7 +100,7 @@ pub struct HeaderBuilder {
     pub parent_hash: Option<[u8; 32]>,
     /// Merkle root of the data in the current block.
     /// Leaves of this tree will be the raw bytes of each blob
-    pub data_hash: Option<[u8; 32]>,
+    pub tx_commitment: Option<[u8; 32]>,
     /// address of proposer of this block.
     pub proposer_address: Option<Address>,
 }
@@ -133,8 +133,8 @@ impl HeaderBuilder {
         self
     }
 
-    pub fn data_hash(mut self, data_hash: [u8; 32]) -> Self {
-        self.data_hash = Some(data_hash);
+    pub fn tx_commitment(mut self, tx_commitment: [u8; 32]) -> Self {
+        self.tx_commitment = Some(tx_commitment);
         self
     }
     pub fn proposer_address(mut self, proposer_address: Address) -> Self {
@@ -146,7 +146,7 @@ impl HeaderBuilder {
         Header::new(
             self.block_number.unwrap(),
             self.timestamp.unwrap(),
-            self.data_hash.unwrap_or_default(),
+            self.tx_commitment.unwrap_or_default(),
             self.proposer_address.unwrap(),
             self.da_commitment.unwrap(),
             self.parent_hash.unwrap(),

@@ -3,7 +3,7 @@ use bytes::Bytes;
 use rand::{thread_rng, RngCore};
 
 pub const BLOB_SIZE: usize = 245760 * 4;
-#[derive(Debug, Encode, Decode)]
+#[derive(Debug, Encode, Decode, Clone, PartialEq, Eq)]
 pub struct Blob {
     /// Data of the blob
     #[bincode(with_serde)]
@@ -18,10 +18,11 @@ impl Default for Blob {
 }
 
 impl Blob {
-    pub fn new(data: [u8; BLOB_SIZE]) -> Self {
-        Self {
-            data: Bytes::from_iter(data.iter().copied()),
+    pub fn new(data: Bytes) -> Self {
+        if data.len() > BLOB_SIZE {
+            panic!("Data is too large");
         }
+        Self { data }
     }
     pub fn data(&self) -> &[u8] {
         self.data.as_ref()
@@ -29,9 +30,9 @@ impl Blob {
     pub fn random() -> Self {
         let mut rng = thread_rng();
 
-        let mut blob = [0; BLOB_SIZE];
+        let mut blob = vec![0; BLOB_SIZE];
         rng.fill_bytes(&mut blob);
 
-        Self::new(blob)
+        Self::new(Bytes::from(blob))
     }
 }

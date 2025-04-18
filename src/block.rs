@@ -6,11 +6,11 @@ use eyre::Ok;
 use frieda::api::commit;
 use rand::{thread_rng, RngCore};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
-use rs_merkle::{algorithms::Sha256, Hasher, MerkleTree};
+use rs_merkle::{algorithms::Sha256, MerkleTree};
 use tracing::{error, info};
 
-use crate::blob::BLOB_SIZE;
 use crate::malachite_types::{address::Address, signing::PrivateKey};
+use crate::transactions::Transaction;
 use crate::{blob::Blob, error::BlockError, header::Header};
 
 #[derive(Debug, Encode, Decode, Default)]
@@ -18,7 +18,7 @@ pub struct Block {
     /// Block Header.
     header: Header,
     /// list of blobs in this block.
-    blobs: [Blob; 4],
+    transactions: Vec<Transaction>,
 }
 
 impl Block {
@@ -28,31 +28,46 @@ impl Block {
         timestamp: u64,
         parent_hash: [u8; 32],
         proposer_address: Address,
-        blobs: [Blob; 4],
+        transactions: Vec<Transaction>,
     ) -> Self {
-        let leaves: Vec<[u8; 32]> = blobs.iter().map(|blob| Sha256::hash(blob.data())).collect();
+        let tx_commitment = if transactions.is_empty() {
+            [0; 32]
+        } else if transactions.len() == 1 {
+            transactions[0].hash()
+        } else {
+            let leaves: Vec<[u8; 32]> = transactions.iter().map(|tx| tx.hash()).collect();
 
-        let merkle_tree = MerkleTree::<Sha256>::from_leaves(&leaves);
+            let merkle_tree = MerkleTree::<Sha256>::from_leaves(&leaves);
 
-        let data_hash = merkle_tree.root().unwrap();
-        let da_commitment = blobs
+            merkle_tree.root().unwrap()
+        };
+
+        let da_commitment = transactions
             .par_iter()
-            .map(|blob| commit(blob.data(), 4))
-            .collect::<Vec<[u8; 32]>>()
-            .try_into()
-            .unwrap();
+            .flat_map(|tx| tx.data())
+            .map(|data| commit(data.data(), 4))
+            .collect::<Vec<[u8; 32]>>();
         let header = Header::new(
             block_number,
             timestamp,
-            data_hash,
+            tx_commitment,
             proposer_address,
-            da_commitment,
+            da_commitment.try_into().unwrap_or_default(),
             parent_hash,
         );
-        Self { header, blobs }
+        Self {
+            header,
+            transactions,
+        }
     }
     pub fn parent_hash(&self) -> [u8; 32] {
         self.header.parent_hash()
+    }
+    pub fn blobs(&self) -> Vec<Blob> {
+        self.transactions
+            .iter()
+            .flat_map(|tx| tx.data().clone())
+            .collect::<Vec<_>>()
     }
 
     pub fn hash(&self) -> [u8; 32] {
@@ -60,18 +75,7 @@ impl Block {
     }
 
     pub fn genesis() -> Self {
-        Self::new(
-            0,
-            69420,
-            [0; 32],
-            Address::default(),
-            [
-                Blob::new([0; BLOB_SIZE]),
-                Blob::new([0; BLOB_SIZE]),
-                Blob::new([0; BLOB_SIZE]),
-                Blob::new([0; BLOB_SIZE]),
-            ],
-        )
+        Self::new(0, 69420, [0; 32], Address::default(), vec![])
     }
     pub fn to_bytes(&self) -> eyre::Result<Bytes> {
         let bytes = bincode::encode_to_vec(self, standard())?;
@@ -111,17 +115,17 @@ impl Block {
             );
             return Ok(false);
         }
-        let expected = self.blob_tree_root()?;
-        let actual = self.header.data_hash;
+        let expected = self.tx_tree_root()?;
+        let actual = self.header.tx_commitment;
         if expected != actual {
             error!(
-                "Data hash mismatch: expected {:?}, got {:?}",
+                "tx commitment mismatch: expected {:?}, got {:?}",
                 expected, actual
             );
             return Ok(false);
         }
         let expected_commitments = self
-            .blobs
+            .blobs()
             .par_iter()
             .map(|blob| commit(blob.data(), 4))
             .collect::<Vec<[u8; 32]>>();
@@ -147,32 +151,19 @@ impl Block {
         Ok(true)
     }
 
-    /// populate the empty fields in `Header`
-    pub fn populate(&mut self) -> eyre::Result<()> {
-        // Set the `data_hash` if not present
-        let blob_tree_root = self.blob_tree_root()?;
-        if self.header.data_hash.is_empty() {
-            self.header.data_hash = blob_tree_root;
-        } else if self.header.data_hash != blob_tree_root {
-            return Err(BlockError::DataHashMismatch(blob_tree_root, self.header.data_hash).into());
-        }
-
-        println!("Header population success!");
-
-        Ok(())
-    }
-
     /// Merklize the raw blob data
-    pub fn blob_tree_root(&self) -> eyre::Result<[u8; 32]> {
-        let leaves: Vec<[u8; 32]> = self
-            .blobs
-            .iter()
-            .map(|blob| Sha256::hash(blob.data()))
-            .collect();
+    pub fn tx_tree_root(&self) -> eyre::Result<[u8; 32]> {
+        if self.transactions.is_empty() {
+            Ok([0; 32])
+        } else if self.transactions.len() == 1 {
+            Ok(self.transactions[0].hash())
+        } else {
+            let leaves: Vec<[u8; 32]> = self.transactions.iter().map(|tx| tx.hash()).collect();
 
-        let merkle_tree = MerkleTree::<Sha256>::from_leaves(&leaves);
+            let merkle_tree = MerkleTree::<Sha256>::from_leaves(&leaves);
 
-        merkle_tree.root().ok_or(BlockError::MerkleTreeError.into())
+            merkle_tree.root().ok_or(BlockError::MerkleTreeError.into())
+        }
     }
 }
 
@@ -196,12 +187,7 @@ mod tests {
             Utc::now().timestamp() as u64,
             prev_block.hash(),
             mock_make_validator(),
-            [
-                Blob::random(),
-                Blob::random(),
-                Blob::random(),
-                Blob::random(),
-            ],
+            vec![Transaction::random()],
         );
         assert!(block.is_valid(1, &prev_block).unwrap());
     }
