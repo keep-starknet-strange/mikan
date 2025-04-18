@@ -19,8 +19,8 @@ use malachitebft_test::codec::proto::ProtobufCodec;
 use malachitebft_test::proto;
 use malachitebft_test::{Height, TestContext, Value, ValueId};
 
-mod keys;
 mod block;
+mod keys;
 use keys::{HeightKey, UndecidedValueKey};
 
 use crate::block::Block;
@@ -99,9 +99,6 @@ impl Db {
         let read_bytes = 0;
 
         let tx = self.db.begin_read()?;
-
-
-
     }
 
     fn get_decided_value(&self, height: Height) -> Result<Option<DecidedValue>, StoreError> {
