@@ -117,6 +117,29 @@ impl Db {
         Ok(())
     }
 
+    fn get_finalized_block_data(&self, height: Height) -> Result<Option<Block>, StoreError> {
+        let tx = self.db.begin_read()?;
+
+        let value = {
+            let table = tx.open_table(FINALIZED_BLOCK_TABLE)?;
+            let pending_block = table.get(&height)?;
+            pending_block.map(|block| block.value())
+        };
+
+        Ok(value)
+    }
+
+    fn insert_finalized_block_data(&self, height: Height, pending_block: Block) -> Result<(), StoreError> {
+        let tx = self.db.begin_write()?;
+
+        {
+            let mut table = tx.open_table(FINALIZED_BLOCK_TABLE)?;
+            table.insert(height, pending_block)?;
+        }
+
+        Ok(())
+    }
+
     fn get_decided_value(&self, height: Height) -> Result<Option<DecidedValue>, StoreError> {
         let start = Instant::now();
         let mut read_bytes = 0;
