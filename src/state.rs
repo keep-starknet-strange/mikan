@@ -162,7 +162,7 @@ impl State {
             Utc::now().timestamp() as u64,
             prev_block.hash(),
             self.address,
-            tx.data().clone(),
+            vec![tx],
         );
 
         let block_data = bincode::encode_to_vec(&block, standard())?;

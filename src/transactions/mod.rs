@@ -1,14 +1,18 @@
 use crate::blob::Blob;
+use bincode::{Decode, Encode};
 use malachitebft_test::{PrivateKey, PublicKey, Signature};
 use rand::{thread_rng, Rng};
 use sha3::Digest;
 use std::cmp::Ordering;
 
 pub mod pool;
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode)]
 pub struct Transaction {
+    #[bincode(with_serde)]
     signature: Signature,
+    #[bincode(with_serde)]
     from: PublicKey,
+    #[bincode(with_serde)]
     to: PublicKey,
     value: u64,
     data: [Blob; 4],
