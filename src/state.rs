@@ -52,7 +52,7 @@ pub struct State {
     // block_proposer: BlockProposer,
     // block_executor: BlockExecutor,
     // rpc_server: Option<RpcServerHandle>,
-    // TODO: replace this wiith rpc server
+    // TODO: replace this with rpc server
     pub transaction_pool: TransactionPool,
     pub current_height: Height,
     pub current_round: Round,
