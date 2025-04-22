@@ -44,3 +44,11 @@ pub enum StoreError {
     #[error("{0}")]
     UnknownError(String),
 }
+
+#[derive(Debug, Error)]
+pub enum StateError {
+    #[error("Transaction pool is empty")]
+    TransactionPoolEmpty,
+    #[error("RPC server is not enabled")]
+    RpcServerNotEnabled,
+}

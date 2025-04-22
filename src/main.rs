@@ -1,19 +1,19 @@
 //! Example application using channels
 
 use crate::malachite_types::codec::proto::ProtobufCodec;
+use crate::malachite_types::height::Height;
+
 use config::Config;
 use eyre::{eyre, Result};
-use malachitebft_test_cli::cmd::dump_wal::DumpWalCmd;
-use malachitebft_test_cli::config::{LogFormat, LogLevel};
-use tracing::info;
-
-use crate::malachite_types::height::Height;
 use malachitebft_app_channel::app::node::Node;
 use malachitebft_test_cli::args::{Args, Commands};
+use malachitebft_test_cli::cmd::dump_wal::DumpWalCmd;
 use malachitebft_test_cli::cmd::init::InitCmd;
 use malachitebft_test_cli::cmd::start::StartCmd;
 use malachitebft_test_cli::cmd::testnet::TestnetCmd;
+use malachitebft_test_cli::config::{LogFormat, LogLevel};
 use malachitebft_test_cli::{logging, runtime};
+use tracing::info;
 
 pub mod app;
 pub mod blob;
@@ -24,6 +24,7 @@ pub mod header;
 pub mod malachite_types;
 pub mod metrics;
 pub mod node;
+pub mod rpc;
 pub mod state;
 pub mod store;
 pub mod streaming;
@@ -64,6 +65,7 @@ fn start(args: &Args, cmd: &StartCmd) -> Result<()> {
         genesis_file: args.get_genesis_file_path()?,
         private_key_file: args.get_priv_validator_key_file_path()?,
         start_height: cmd.start_height.map(Height::new),
+        enable_rpc: true,
     };
 
     let config: Config = app.load_config()?;
@@ -92,6 +94,7 @@ fn init(args: &Args, cmd: &InitCmd) -> Result<()> {
         genesis_file: args.get_genesis_file_path()?,
         private_key_file: args.get_priv_validator_key_file_path()?,
         start_height: None,
+        enable_rpc: true,
     };
 
     cmd.run(
@@ -115,6 +118,7 @@ fn testnet(args: &Args, cmd: &TestnetCmd) -> Result<()> {
         genesis_file: args.get_genesis_file_path()?,
         private_key_file: args.get_priv_validator_key_file_path()?,
         start_height: Some(Height::new(1)), // We always start at height 1
+        enable_rpc: true,
     };
 
     cmd.run(&app, &args.get_home_dir()?)

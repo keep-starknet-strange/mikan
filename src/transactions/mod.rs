@@ -22,6 +22,31 @@ pub struct Transaction {
 }
 
 impl Transaction {
+    pub fn new(
+        from: PublicKey,
+        to: PublicKey,
+        signature: Signature,
+        value: u64,
+        data: [Blob; 4],
+        nonce: u64,
+        gas_price: u64,
+    ) -> Self {
+        let mut tx = Self {
+            signature,
+            from,
+            to,
+            value,
+            data,
+            nonce,
+            gas_price,
+            hash: Default::default(),
+        };
+        let tx_bytes = tx.to_bytes();
+        let hash: [u8; 32] = sha3::Keccak256::digest(&tx_bytes).into();
+        tx.hash = hash;
+        tx
+    }
+
     pub fn to_bytes(&self) -> Vec<u8> {
         let mut bytes = vec![];
         bytes.extend_from_slice(self.from.as_bytes());
@@ -95,6 +120,7 @@ mod tests {
     #[test]
     fn test_random() {
         let tx = Transaction::random();
+        println!("tx: {:?}", tx);
         assert!(tx.validate());
     }
 }

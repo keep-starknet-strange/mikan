@@ -124,11 +124,14 @@ impl Block {
             );
             return Ok(false);
         }
-        let expected_commitments = self
-            .blobs()
-            .par_iter()
-            .map(|blob| commit(blob.data(), 4))
-            .collect::<Vec<[u8; 32]>>();
+        let expected_commitments = if self.blobs().is_empty() {
+            vec![[0; 32]; 4]
+        } else {
+            self.blobs()
+                .par_iter()
+                .map(|blob| commit(blob.data(), 4))
+                .collect::<Vec<[u8; 32]>>()
+        };
         let actual_commitments = self.header.da_commitment;
         if expected_commitments != actual_commitments {
             error!(

@@ -44,6 +44,7 @@ pub struct App {
     pub genesis_file: PathBuf,
     pub private_key_file: PathBuf,
     pub start_height: Option<Height>,
+    pub enable_rpc: bool,
 }
 
 pub struct Handle {
@@ -156,9 +157,7 @@ impl Node for App {
         let store = Store::open(db_dir.join("store.db"), metrics)?;
         let start_height = self.start_height.unwrap_or(Height::INITIAL);
         let transaction_pool = TransactionPool::new();
-        for _ in 0..100 {
-            transaction_pool.add_transaction(Transaction::random());
-        }
+
         let mut state = State::new(
             genesis,
             ctx,
@@ -167,7 +166,7 @@ impl Node for App {
             start_height,
             store,
             transaction_pool,
-            false,
+            self.enable_rpc,
         )
         .await;
 

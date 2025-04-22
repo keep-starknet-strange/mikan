@@ -1,12 +1,12 @@
 use std::sync::{Arc, Mutex};
 
-use sorted_vec::SortedSet;
+use sorted_vec::{SortedSet, SortedVec};
 
 use super::Transaction;
 
 #[derive(Debug, Clone, Default)]
 pub struct TransactionPool {
-    transactions: Arc<Mutex<SortedSet<Transaction>>>,
+    transactions: Arc<Mutex<SortedVec<Transaction>>>,
 }
 
 impl TransactionPool {
@@ -29,13 +29,13 @@ impl TransactionPool {
     pub fn tx_count(&self) -> usize {
         self.transactions.try_lock().unwrap().len()
     }
-    pub fn get_top_transaction(&self) -> Transaction {
-        self.transactions
-            .try_lock()
-            .unwrap()
-            .drain(..1)
-            .next()
-            .unwrap()
+    pub fn get_top_transaction(&self) -> Option<Transaction> {
+        let mut transactions = self.transactions.try_lock().unwrap();
+        if transactions.len() > 0 {
+            transactions.drain(..1).next()
+        } else {
+            None
+        }
     }
 
     pub fn get_transactions(&self, count: usize) -> Vec<Transaction> {
