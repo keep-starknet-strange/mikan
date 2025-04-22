@@ -155,7 +155,7 @@ impl State {
         let tx = loop {
             let tx = rpc_serv.get_top_transaction();
             if tx.is_none() {
-                error!("No transaction to add to block");
+                info!("No transaction to add to block");
                 break None;
             }
             if tx.is_some() {
@@ -174,7 +174,6 @@ impl State {
             );
             vec![tx]
         } else {
-            info!("No valid transaction to add to block");
             vec![]
         };
         let block = Block::new(

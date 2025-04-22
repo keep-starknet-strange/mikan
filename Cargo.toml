@@ -8,6 +8,8 @@ repository = "https://github.com/AbdelStark/mikan"
 keywords = ["cryptography", "data-availability", "fri", "erasure-coding"]
 categories = ["cryptography", "algorithms"]
 
+[lib]
+
 [dependencies]
 # Malachite dependencies
 malachitebft-app-channel = { version = "0.1.0", package = "informalsystems-malachitebft-app-channel", git = "https://github.com/informalsystems/malachite", rev = "fd6b2452fffc5903d0fed36bb4ed984ae7e9085b" }
@@ -50,8 +52,14 @@ rayon = "1.10.0"
 sorted-vec = "0.8.6"
 jsonrpsee = { version = "0.20", features = ["full"] }
 
+[dev-dependencies]
+reqwest = { version = "0.11", features = ["json"] }
+ctrlc = "3.4"
 [build-dependencies]
 prost-build = "0.13"
 
 [workspace.lints.clippy]
 too_many_arguments = "allow"
+
+[[example]]
+name = "simple"

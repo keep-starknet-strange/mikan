@@ -21,6 +21,26 @@ pub struct RpcTransaction {
     pub data: [Blob; 4],
 }
 
+impl RpcTransaction {
+    pub fn random() -> Self {
+        Transaction::random().into()
+    }
+}
+
+impl From<Transaction> for RpcTransaction {
+    fn from(tx: Transaction) -> Self {
+        Self {
+            from: tx.from_(),
+            to: tx.to(),
+            signature: tx.signature(),
+            value: tx.value(),
+            nonce: tx.nonce(),
+            gas_price: tx.gas_price(),
+            data: tx.data().clone(),
+        }
+    }
+}
+
 impl Serialize for RpcTransaction {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -206,7 +226,6 @@ impl MikanRpcObj {
         let server = ServerBuilder::default().build(addr).await?;
 
         let handle = server.start(self.clone().into_rpc());
-        println!("RPC server started on {}", addr);
         info!("RPC server started on {}", addr);
 
         Ok((handle, self))
@@ -222,16 +241,10 @@ impl MikanRpcObj {
 #[async_trait]
 impl MikanApiServer for MikanRpcObj {
     async fn send_transaction(&self, tx: RpcTransaction) -> RpcResult<String> {
-        let tx = Transaction::new(
-            tx.from,
-            tx.to,
-            tx.signature,
-            tx.value,
-            tx.data,
-            tx.nonce,
-            tx.gas_price,
-        );
+        let tx = Transaction::from(tx);
+
         self.transaction_pool.add_transaction(tx.clone());
+        info!("Transaction sent: {}", hex::encode(tx.hash()));
         Ok(hex::encode(tx.hash()))
     }
 }

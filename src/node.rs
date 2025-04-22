@@ -28,7 +28,6 @@ use crate::malachite_types::{
     validator_set::Validator, validator_set::ValidatorSet,
 };
 use crate::transactions::pool::TransactionPool;
-use crate::transactions::Transaction;
 use malachitebft_test_cli::metrics;
 
 use crate::config::{load_config, Config};
