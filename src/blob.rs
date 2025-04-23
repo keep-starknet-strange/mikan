@@ -1,9 +1,9 @@
 use bincode::{Decode, Encode};
 use bytes::Bytes;
 use rand::{thread_rng, RngCore};
-
+use serde::{Deserialize, Serialize};
 pub const BLOB_SIZE: usize = 245760 * 4;
-#[derive(Debug, Encode, Decode, Clone, PartialEq, Eq)]
+#[derive(Debug, Encode, Decode, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Blob {
     /// Data of the blob
     #[bincode(with_serde)]

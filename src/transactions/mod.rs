@@ -1,4 +1,4 @@
-use crate::blob::Blob;
+use crate::{blob::Blob, rpc::RpcTransaction};
 use bincode::{Decode, Encode};
 use malachitebft_test::{PrivateKey, PublicKey, Signature};
 use rand::{thread_rng, Rng};
@@ -20,8 +20,45 @@ pub struct Transaction {
     gas_price: u64,
     hash: [u8; 32],
 }
-
+impl From<RpcTransaction> for Transaction {
+    fn from(rpc_tx: RpcTransaction) -> Self {
+        Self::new(
+            rpc_tx.from,
+            rpc_tx.to,
+            rpc_tx.signature,
+            rpc_tx.value,
+            rpc_tx.data,
+            rpc_tx.nonce,
+            rpc_tx.gas_price,
+        )
+    }
+}
 impl Transaction {
+    pub fn new(
+        from: PublicKey,
+        to: PublicKey,
+        signature: Signature,
+        value: u64,
+        data: [Blob; 4],
+        nonce: u64,
+        gas_price: u64,
+    ) -> Self {
+        let mut tx = Self {
+            signature,
+            from,
+            to,
+            value,
+            data,
+            nonce,
+            gas_price,
+            hash: Default::default(),
+        };
+        let tx_bytes = tx.to_bytes();
+        let hash: [u8; 32] = sha3::Keccak256::digest(&tx_bytes).into();
+        tx.hash = hash;
+        tx
+    }
+
     pub fn to_bytes(&self) -> Vec<u8> {
         let mut bytes = vec![];
         bytes.extend_from_slice(self.from.as_bytes());
@@ -48,6 +85,25 @@ impl Transaction {
     pub fn hash(&self) -> [u8; 32] {
         self.hash
     }
+    pub fn from_(&self) -> PublicKey {
+        self.from
+    }
+    pub fn to(&self) -> PublicKey {
+        self.to
+    }
+    pub fn value(&self) -> u64 {
+        self.value
+    }
+    pub fn nonce(&self) -> u64 {
+        self.nonce
+    }
+    pub fn gas_price(&self) -> u64 {
+        self.gas_price
+    }
+    pub fn signature(&self) -> Signature {
+        self.signature
+    }
+
     pub fn random() -> Self {
         let mut rng = thread_rng();
         let private_key = PrivateKey::generate(&mut rng);
@@ -95,6 +151,7 @@ mod tests {
     #[test]
     fn test_random() {
         let tx = Transaction::random();
+        println!("tx: {:?}", tx);
         assert!(tx.validate());
     }
 }

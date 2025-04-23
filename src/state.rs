@@ -2,6 +2,7 @@
 //! A regular application would have mempool implemented, a proper database and input methods like RPC.
 
 use crate::block::Block;
+use crate::error::StateError;
 use crate::malachite_types::codec::proto::ProtobufCodec;
 use crate::malachite_types::signing::Ed25519Provider;
 use crate::malachite_types::value::Value;
@@ -13,6 +14,7 @@ use crate::malachite_types::{
     proposal_part::{ProposalData, ProposalFin, ProposalInit, ProposalPart},
     validator_set::ValidatorSet,
 };
+use crate::rpc::MikanRpcObj;
 use crate::store::{DecidedValue, Store};
 use crate::streaming::{PartStreamsMap, ProposalParts};
 use crate::transactions::pool::TransactionPool;
@@ -21,6 +23,7 @@ use bytes::Bytes;
 use chrono::Utc;
 use color_eyre::eyre;
 use eyre::Result;
+use jsonrpsee::server::ServerHandle;
 use malachitebft_app_channel::app::streaming::{StreamContent, StreamId, StreamMessage};
 use malachitebft_app_channel::app::types::codec::Codec;
 use malachitebft_app_channel::app::types::core::{CommitCertificate, Round, Validity};
@@ -28,6 +31,7 @@ use malachitebft_app_channel::app::types::{LocallyProposedValue, PeerId, Propose
 use sha3::Digest;
 use std::collections::HashSet;
 use std::mem::size_of;
+use std::time::{Duration, Instant};
 use tracing::{debug, error, info};
 
 /// Size of chunks in which the data is split for streaming
@@ -51,9 +55,10 @@ pub struct State {
     streams_map: PartStreamsMap,
     // block_proposer: BlockProposer,
     // block_executor: BlockExecutor,
-    // rpc_server: Option<RpcServerHandle>,
+    pub rpc_server: Option<MikanRpcObj>,
+    pub rpc_server_handle: Option<ServerHandle>,
     // TODO: replace this wiith rpc server
-    pub transaction_pool: TransactionPool,
+    // pub transaction_pool: TransactionPool,
     pub current_height: Height,
     pub current_round: Round,
     pub current_proposer: Option<Address>,
@@ -84,7 +89,7 @@ impl State {
         height: Height,
         store: Store,
         transaction_pool: TransactionPool,
-        _enable_rpc: bool,
+        enable_rpc: bool,
     ) -> Self {
         // Get the node's home directory from the store path
         let store_path = store.get_path();
@@ -105,20 +110,15 @@ impl State {
         // let eth_genesis: EthGenesis = serde_json::from_str(&eth_genesis_json).unwrap();
 
         // let block_executor = BlockExecutor::new(db_path, eth_genesis.clone()).unwrap();
-        // let rpc_server = if enable_rpc {
-        //     match block_executor.start_server().await {
-        //         Ok(handle) => {
-        //             info!("RPC server started successfully");
-        //             Some(handle)
-        //         }
-        //         Err(e) => {
-        //             error!("Failed to start RPC server: {}", e);
-        //             None
-        //         }
-        //     }
-        // } else {
-        //     None
-        // };
+        println!("enable_rpc: {}", enable_rpc);
+        let rpc_server = if enable_rpc {
+            MikanRpcObj::new(transaction_pool, store.clone())
+                .start(8545 + node_index as u16)
+                .await
+                .ok()
+        } else {
+            None
+        };
 
         Self {
             genesis,
@@ -132,7 +132,8 @@ impl State {
             stream_nonce: 0,
             streams_map: PartStreamsMap::new(),
             peers: HashSet::new(),
-            transaction_pool,
+            rpc_server: rpc_server.clone().map(|(_, rpc_server)| rpc_server),
+            rpc_server_handle: rpc_server.map(|(handle, _)| handle),
             // block_proposer: BlockProposer::new(&blocks_file).unwrap(),
             // block_executor,
             // rpc_server,
@@ -140,6 +141,7 @@ impl State {
     }
 
     pub async fn make_block(&mut self) -> eyre::Result<Bytes> {
+        let start = Instant::now();
         let prev_block = self
             .store
             .get_decided_block(self.current_height - 1)
@@ -148,21 +150,43 @@ impl State {
         let (prev_block, _): (Block, usize) =
             bincode::borrow_decode_from_slice(prev_block.as_ref(), standard())?;
 
-        let mut tx = self.transaction_pool.get_top_transaction();
-        while !tx.validate() {
-            error!("Invalid transaction, skipping");
-            tx = self.transaction_pool.get_top_transaction();
-        }
-        info!(
-            "Valid transaction, {} adding to block",
-            hex::encode(tx.hash())
-        );
+        let rpc_serv = self
+            .rpc_server
+            .as_ref()
+            .ok_or(StateError::RpcServerNotEnabled)?;
+
+        let tx = loop {
+            let tx = rpc_serv.get_top_transaction();
+            if start.elapsed() > Duration::from_secs(1) || tx.is_none() {
+                info!("No transaction to add to block");
+                break None;
+            }
+            if tx.is_some() {
+                let tx = tx.unwrap();
+                if tx.validate() {
+                    break Some(tx);
+                } else {
+                    info!("Invalid transaction, skipping");
+                }
+            }
+        };
+        while start.elapsed() < Duration::from_secs(1) {}
+
+        let txs = if let Some(tx) = tx {
+            info!(
+                "Valid transaction, {} adding to block",
+                hex::encode(tx.hash())
+            );
+            vec![tx]
+        } else {
+            vec![]
+        };
         let block = Block::new(
             self.current_height.as_u64(),
             Utc::now().timestamp() as u64,
             prev_block.hash(),
             self.address,
-            vec![tx],
+            txs,
         );
 
         let block_data = bincode::encode_to_vec(&block, standard())?;
