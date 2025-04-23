@@ -1,13 +1,18 @@
 use async_trait::async_trait;
+use frieda::proof::{FriConfig, PcsConfig, Proof};
 use jsonrpsee::core::RpcResult;
 use jsonrpsee::proc_macros::rpc;
 use jsonrpsee::server::{ServerBuilder, ServerHandle};
+use jsonrpsee::types::error::INTERNAL_ERROR_CODE;
+use jsonrpsee::types::ErrorObject;
 use serde::{Deserialize, Serialize};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use tracing::info;
 
 use crate::blob::Blob;
+use crate::store::Store;
 use crate::transactions::{pool::TransactionPool, Transaction};
+use frieda::api::generate_proof;
 use malachitebft_test::{PublicKey, Signature};
 
 #[derive(Debug)]
@@ -210,15 +215,31 @@ impl<'de> Deserialize<'de> for RpcTransaction {
 pub trait MikanApi {
     #[method(name = "sendTransaction")]
     async fn send_transaction(&self, tx: RpcTransaction) -> RpcResult<String>;
+
+    #[method(name = "sampleBlob")]
+    async fn sample_blob(
+        &self,
+        block_height: u64,
+        blob_index: usize,
+        sampling_seed: Option<u64>,
+    ) -> RpcResult<Proof>;
+
+    #[method(name = "blockNumber")]
+    async fn block_number(&self) -> u64;
 }
+
 #[derive(Clone)]
 pub struct MikanRpcObj {
     transaction_pool: TransactionPool,
+    store: Store,
 }
 
 impl MikanRpcObj {
-    pub fn new(transaction_pool: TransactionPool) -> Self {
-        Self { transaction_pool }
+    pub fn new(transaction_pool: TransactionPool, store: Store) -> Self {
+        Self {
+            transaction_pool,
+            store,
+        }
     }
 
     pub async fn start(self, port: u16) -> eyre::Result<(ServerHandle, Self)> {
@@ -246,5 +267,81 @@ impl MikanApiServer for MikanRpcObj {
         self.transaction_pool.add_transaction(tx.clone());
         info!("Transaction sent: {}", hex::encode(tx.hash()));
         Ok(hex::encode(tx.hash()))
+    }
+
+    async fn block_number(&self) -> u64 {
+        // Get the latest block height from the store
+        let height = self
+            .store
+            .max_decided_value_height()
+            .await
+            .unwrap_or_default();
+
+        height.as_u64()
+    }
+
+    async fn sample_blob(
+        &self,
+        block_height: u64,
+        blob_index: usize,
+        sampling_seed: Option<u64>,
+    ) -> RpcResult<Proof> {
+        let height = crate::malachite_types::height::Height::new(block_height);
+
+        // Get the block data
+        let block_data = self.store.get_decided_block(height).await.map_err(|_| {
+            ErrorObject::owned(
+                INTERNAL_ERROR_CODE,
+                "Couldn't find block",
+                Option::<String>::None,
+            )
+        })?;
+
+        let block_data = block_data.ok_or(ErrorObject::owned(
+            INTERNAL_ERROR_CODE,
+            "Couldn't find block",
+            Option::<String>::None,
+        ))?;
+
+        // Decode the block
+        let (block, _): (crate::block::Block, _) =
+            bincode::borrow_decode_from_slice(&block_data, bincode::config::standard()).map_err(
+                |_| {
+                    ErrorObject::owned(
+                        INTERNAL_ERROR_CODE,
+                        "Couldn't decode block",
+                        Option::<String>::None,
+                    )
+                },
+            )?;
+
+        // Get all blobs from the block
+        let blobs = block.blobs();
+
+        // Check if the requested blob index is valid
+        if blob_index >= blobs.len() {
+            return Err(ErrorObject::owned(
+                INTERNAL_ERROR_CODE,
+                "Blob index out of bounds",
+                Option::<String>::None,
+            ));
+        };
+
+        // Generate a FRIEDA proof for the blob
+        let proof = generate_proof(
+            blobs[blob_index].data(),
+            sampling_seed,
+            PcsConfig {
+                pow_bits: 20,
+                fri_config: FriConfig {
+                    log_blowup_factor: 4,
+                    log_last_layer_degree_bound: 0,
+                    n_queries: 20,
+                },
+            },
+        );
+
+        // Return the proof as a hex string
+        Ok(proof)
     }
 }

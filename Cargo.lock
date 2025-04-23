@@ -1482,7 +1482,7 @@ dependencies = [
 [[package]]
 name = "frieda"
 version = "0.1.0"
-source = "git+https://github.com/keep-starknet-strange/frieda?branch=main#9a57708ecb3b56afcf19827b5a2ae3220061a14a"
+source = "git+https://github.com/keep-starknet-strange/frieda?branch=refacto%2Fintegration#54fc4966799e658f22e3c96b540ae483ece1ddc7"
 dependencies = [
  "bitvec",
  "serde",

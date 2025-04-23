@@ -31,6 +31,7 @@ use malachitebft_app_channel::app::types::{LocallyProposedValue, PeerId, Propose
 use sha3::Digest;
 use std::collections::HashSet;
 use std::mem::size_of;
+use std::time::{Duration, Instant};
 use tracing::{debug, error, info};
 
 /// Size of chunks in which the data is split for streaming
@@ -111,7 +112,7 @@ impl State {
         // let block_executor = BlockExecutor::new(db_path, eth_genesis.clone()).unwrap();
         println!("enable_rpc: {}", enable_rpc);
         let rpc_server = if enable_rpc {
-            MikanRpcObj::new(transaction_pool)
+            MikanRpcObj::new(transaction_pool, store.clone())
                 .start(8545 + node_index as u16)
                 .await
                 .ok()
@@ -140,6 +141,7 @@ impl State {
     }
 
     pub async fn make_block(&mut self) -> eyre::Result<Bytes> {
+        let start = Instant::now();
         let prev_block = self
             .store
             .get_decided_block(self.current_height - 1)
@@ -152,9 +154,10 @@ impl State {
             .rpc_server
             .as_ref()
             .ok_or(StateError::RpcServerNotEnabled)?;
+
         let tx = loop {
             let tx = rpc_serv.get_top_transaction();
-            if tx.is_none() {
+            if start.elapsed() > Duration::from_secs(1) || tx.is_none() {
                 info!("No transaction to add to block");
                 break None;
             }
@@ -167,6 +170,8 @@ impl State {
                 }
             }
         };
+        while start.elapsed() < Duration::from_secs(1) {}
+
         let txs = if let Some(tx) = tx {
             info!(
                 "Valid transaction, {} adding to block",
