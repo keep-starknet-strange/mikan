@@ -226,6 +226,9 @@ pub trait MikanApi {
 
     #[method(name = "blockNumber")]
     async fn block_number(&self) -> u64;
+
+    #[method(name = "getBlob")]
+    async fn get_blob(&self, block_height: u64, blob_index: usize) -> RpcResult<Blob>;
 }
 
 #[derive(Clone)]
@@ -343,5 +346,49 @@ impl MikanApiServer for MikanRpcObj {
 
         // Return the proof as a hex string
         Ok(proof)
+    }
+    async fn get_blob(&self, block_height: u64, blob_index: usize) -> RpcResult<Blob> {
+        let height = crate::malachite_types::height::Height::new(block_height);
+
+        // Get the block data
+        let block_data = self.store.get_decided_block(height).await.map_err(|_| {
+            ErrorObject::owned(
+                INTERNAL_ERROR_CODE,
+                "Couldn't find block",
+                Option::<String>::None,
+            )
+        })?;
+
+        let block_data = block_data.ok_or(ErrorObject::owned(
+            INTERNAL_ERROR_CODE,
+            "Couldn't find block",
+            Option::<String>::None,
+        ))?;
+
+        // Decode the block
+        let (block, _): (crate::block::Block, _) =
+            bincode::borrow_decode_from_slice(&block_data, bincode::config::standard()).map_err(
+                |_| {
+                    ErrorObject::owned(
+                        INTERNAL_ERROR_CODE,
+                        "Couldn't decode block",
+                        Option::<String>::None,
+                    )
+                },
+            )?;
+
+        // Get all blobs from the block
+        let blobs = block.blobs();
+
+        // Check if the requested blob index is valid
+        if blob_index >= blobs.len() {
+            return Err(ErrorObject::owned(
+                INTERNAL_ERROR_CODE,
+                "Blob index out of bounds",
+                Option::<String>::None,
+            ));
+        };
+
+        Ok(blobs[blob_index].clone())
     }
 }

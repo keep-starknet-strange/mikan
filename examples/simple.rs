@@ -1,11 +1,11 @@
 use frieda::proof::Proof;
+use mikan::blob::Blob;
 use mikan::rpc::RpcTransaction;
 use reqwest::Client;
 use serde_json::{json, Value};
 use std::process::Command;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use std::thread;
 use std::time::Duration;
 use tokio::runtime::Runtime;
 
@@ -23,7 +23,6 @@ fn main() {
 
     // Wait for nodes to start
     println!("Waiting for nodes to start...");
-    thread::sleep(Duration::from_secs(5));
 
     // Create a flag to control the transaction sending loop
     let running = Arc::new(AtomicBool::new(true));
@@ -64,7 +63,7 @@ async fn run_workers(running: Arc<AtomicBool>) {
     let mut handles = Vec::new();
 
     // Transaction workers
-    let tx_workers = 8;
+    let tx_workers = 6;
     for worker_id in 0..tx_workers {
         let client_clone = client.clone();
         let node_urls_clone = node_urls.clone();
@@ -161,9 +160,15 @@ async fn sampling_worker(
                         "Sample Worker {}: Successfully({verified}) sampled blob {} from block {}",
                         worker_id, blob_index, block_height
                     );
+                    let blob = get_blob(&client, url, block_height, blob_index).await;
+                    if blob.is_some() {
+                        println!("Successfully got Blob: {:?}", blob.unwrap().data().len());
+                    } else {
+                        println!("Failed to get Blob");
+                    }
                 }
                 None => eprintln!(
-                    "Sample Worker {}: Failed to sample blob from block {}",
+                    "Sample Worker {}: No blob in block {}",
                     worker_id, block_height
                 ),
             }
@@ -235,6 +240,35 @@ async fn sample_blob(
     let proof: Proof = serde_json::from_value(result["result"].clone()).ok()?;
 
     Some(proof)
+}
+
+async fn get_blob(
+    client: &Client,
+    url: &str,
+    block_height: u64,
+    blob_index: usize,
+) -> Option<Blob> {
+    let response = client
+        .post(url)
+        .json(&json!({
+            "jsonrpc": "2.0",
+            "method": "mikan_getBlob",
+            "params": [block_height, blob_index],
+            "id": 1
+        }))
+        .send()
+        .await
+        .ok()?;
+
+    let result: Value = response.json().await.ok()?;
+
+    if result.get("error").is_some() {
+        return None;
+    }
+
+    let blob: Blob = serde_json::from_value(result["result"].clone()).ok()?;
+
+    Some(blob)
 }
 
 async fn get_block_number(client: &Client, url: &str) -> u64 {
