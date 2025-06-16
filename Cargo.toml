@@ -34,7 +34,7 @@ color-eyre = "0.6"
 config = { version = "0.15", features = ["toml"], default-features = false }
 eyre = "0.6"
 itertools = "0.14"
-prost = "0.13"
+prost = "0.14"
 rand = { version = "0.8.5", features = ["std_rng"] }
 redb = "2.4.0"
 serde = "1.0"
